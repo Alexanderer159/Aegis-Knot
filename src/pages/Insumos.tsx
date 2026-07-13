@@ -58,12 +58,12 @@ function saveSupplies(items: SupplyItem[]) {
 }
 
 const categoryColors: Record<string, string> = {
-  Agua: "bg-blue-500/20 text-blue-400",
-  Alimentación: "bg-amber-500/20 text-amber-400",
-  Médico: "bg-red-500/20 text-red-400",
-  Energía: "bg-yellow-500/20 text-yellow-400",
-  Herramientas: "bg-primary/20 text-primary",
-  Comunicaciones: "bg-purple-500/20 text-purple-400",
+  Agua: "border-blue-500/40 border-2 text-blue-400 font-semibold bg-secondary",
+  Alimentación: "border-amber-500/40 border-2 text-amber-400 font-semibold bg-secondary",
+  Médico: "border-red-500/20 border-2 text-red-400 font-semibold bg-secondary",
+  Energía: "border-yellow-500/20 border-2 text-yellow-400 font-semibold bg-secondary",
+  Herramientas: "border-primary/20 border-2 text-primary font-semibold bg-secondary",
+  Comunicaciones: "border-purple-500/20 border-2 text-purple-400 font-semibold bg-secondary",
 };
 
 export default function Insumos() {
@@ -140,17 +140,18 @@ export default function Insumos() {
     <div className="space-y-5">
       {/* Header Stats */}
       <section className="space-y-3">
-        <h2 className="text-lg md:text-2xl text-center text-muted-foreground">Lista de Insumos</h2>
-        <Card className="tactical-border">
-          <CardContent className="py-4 space-y-3">
+        <h2 className="text-3xl text-center text-foreground">Lista de Suministros</h2>
+        <Card className="">
+          <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
+
               <div className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-primary" />
+                <Package className="h-7 w-7 text-primary" />
                 <span className="font-heading font-bold text-lg">{overallPercent}% COMPLETO</span>
               </div>
-              <Badge variant="outline" className="border-warning/50 text-warning">
-                {pendingCount} pendientes
-              </Badge>
+
+              <Badge variant="outline" className="border-primary/50">{pendingCount} pendientes</Badge>
+
             </div>
             <Progress value={overallPercent} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -164,7 +165,7 @@ export default function Insumos() {
       {/* Category Filter */}
       <div className="grid grid-cols-2 gap-2 overflow-x-auto pb-1 ">
         {categories.map(cat => (
-          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-bold p-2 font-heading transition-all", filter === cat ? "bg-primary" : "bg-secondary")}>
+          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary/70" : "bg-secondary")}>
             {cat === "all" ? "Todos" : cat}
           </button>
         ))}
@@ -179,23 +180,14 @@ export default function Insumos() {
 
           return (
             <Card key={item.id} className={cn(
-              "tactical-border transition-opacity",
+              "transition-all",
               item.acquired && "opacity-50"
             )}>
               <CardContent className="py-3 px-4">
                 <div className="flex items-center gap-3">
                   {/* Check button */}
-                  <button
-                    onClick={() => toggleAcquired(item.id)}
-                    className={cn(
-                      "shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                      item.acquired
-                        ? "bg-primary border-primary"
-                        : isComplete
-                          ? "border-primary/50"
-                          : "border-muted-foreground/30"
-                    )}
-                  >
+                  <button onClick={() => toggleAcquired(item.id)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                      item.acquired ? "bg-primary border-primary" : isComplete ? "border-primary/50" : "border-muted-foreground/30")}>
                     {item.acquired && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
                   </button>
 

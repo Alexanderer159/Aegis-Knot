@@ -53,7 +53,7 @@ export default function Grupo() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-lg md:text-2xl text-center text-muted-foreground">Roles Operativos</h2>
+      <h2 className="text-3xl text-center">KNOT</h2>
 
       {/* Role Cards */}
       <div className="space-y-2">

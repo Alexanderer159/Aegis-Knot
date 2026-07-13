@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, ShieldAlert, AlertTriangle, CheckCircle2, Radio, MapPin, Package, X, Navigation } from "lucide-react";
+import { Shield, ShieldAlert, AlertTriangle, CheckCircle2, Radio, MapPin, Package, X, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,7 +87,6 @@ export default function Dashboard() {
     <div className="space-y-5">
       {/* Status Buttons */}
       <section className="space-y-3">
-        
 
         <div className="grid grid-cols-3 gap-3">
           <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-primary", userStatus === "ok" && "ring-2 ring-safe ")} onClick={() => updateStatus("ok")}>
@@ -114,11 +113,7 @@ export default function Dashboard() {
           const isEditing = editingPoint === key;
 
           return (
-            <Card
-              key={key}
-              className="tactical-border cursor-pointer hover:border-primary/40 transition-colors"
-              onClick={() => !isEditing && setEditingPoint(key)}
-            >
+            <Card key={key} className="cursor-pointer transition-all" onClick={() => !isEditing && setEditingPoint(key)}>
               <CardContent className="py-3 px-3">
                 {isEditing ? (
                   <div className="space-y-2" onClick={e => e.stopPropagation()}>
@@ -128,34 +123,28 @@ export default function Dashboard() {
                         <X className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     </div>
-                    <Input
-                      placeholder="Latitud"
-                      value={wp.lat}
-                      onChange={e => updateWaypoint(key, "lat", e.target.value)}
-                      className="h-7 text-xs bg-secondary"
-                    />
-                    <Input
-                      placeholder="Longitud"
-                      value={wp.lng}
-                      onChange={e => updateWaypoint(key, "lng", e.target.value)}
-                      className="h-7 text-xs bg-secondary"
-                    />
-                    <Button size="sm" className="w-full h-7 text-xs" onClick={() => setEditingPoint(null)}>
-                      Guardar
-                    </Button>
+                    <Input placeholder="Latitud" value={wp.lat}  onChange={e => updateWaypoint(key, "lat", e.target.value)} className="h-7 text-xs bg-secondary"/>
+                    <Input placeholder="Longitud" value={wp.lng} onChange={e => updateWaypoint(key, "lng", e.target.value)} className="h-7 text-xs bg-secondary"/>
+                    <Button size="sm" className="w-full h-7 font-bold text-black" onClick={() => setEditingPoint(null)}>Guardar</Button>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center">
-                    <MapPin className="h-4 w-4 text-primary mb-1" />
+                  <div className="flex gap-1 flex-col items-center">
+                    
+                    <MapPin className="h-5 w-5 text-primary mb-1" />
+
                     <span className="text-xs text-muted-foreground">Punto</span>
+
                     <span className="text-sm font-heading font-bold text-foreground">{label}</span>
+
                     {hasCoords(wp) ? (
-                      <span className="text-[10px] text-primary font-mono mt-1">
+
+                      <span className="text-xs text-primary font-mono text-center">
                         {parseFloat(wp.lat).toFixed(4)}, {parseFloat(wp.lng).toFixed(4)}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-muted-foreground mt-1">Toca para definir</span>
+                      <span className="text-xs text-muted-foreground">Toca para definir</span>
                     )}
+
                   </div>
                 )}
               </CardContent>
@@ -168,9 +157,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3">
         <Card className="tactical-border cursor-pointer hover:border-primary/40 transition-colors" onClick={() => navigate("/insumos")}>
           <CardContent className="flex flex-col items-center py-3 px-2">
-            <Package className="h-4 w-4 text-warning mb-1" />
+            <Package className="h-4 w-4 text-primary mb-1" />
             <span className="text-xs text-muted-foreground">Suministros</span>
-            <span className={cn("text-sm font-heading font-bold", supplyPercent >= 75 ? "text-primary" : supplyPercent >= 40 ? "text-warning" : "text-destructive")}>{supplyPercent}%</span>
+            <span className={cn("text-sm font-heading font-bold", supplyPercent >= 75 ? "text-primary" : supplyPercent >= 40 ? "text-warning" : "text-critical")}>{supplyPercent}%</span>
             <Progress value={supplyPercent} className="h-1 mt-1 w-full" />
           </CardContent>
         </Card>
@@ -186,9 +175,8 @@ export default function Dashboard() {
       {/* Pod Members */}
       <Card className="tactical-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            POD MEMBERS
+          <CardTitle className="flex items-center justify-center gap-2">
+            <User className="h-7 w-7 text-primary" /> MIEMBROS DEL KNOT
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
