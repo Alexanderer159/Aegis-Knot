@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 93%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 93%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 93%;
+
+    --primary: 110 100% 55%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 85%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 93%;
+
+    --destructive: 0 65% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 30 100% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    --safe: 110 100% 55%;
+    --safe-foreground: 0 0% 0%;
+
+    --critical: 0 65% 52%;
+    --critical-foreground: 0 0% 100%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 110 100% 55%;
+
+    --radius: 0.75rem;
+  }
+}
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+  }
+
+  .tactical-grid {
+    background-image: 
+      linear-gradient(hsl(110 100% 55% / 0.233) 1px, transparent 1px),
+      linear-gradient(90deg, hsla(110, 100%, 55%, 0.233) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+

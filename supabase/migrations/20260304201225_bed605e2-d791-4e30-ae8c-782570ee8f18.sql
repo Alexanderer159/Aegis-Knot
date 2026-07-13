@@ -1,0 +1,1 @@
+ALTER TYPE public.pod_role ADD VALUE 'builder';
