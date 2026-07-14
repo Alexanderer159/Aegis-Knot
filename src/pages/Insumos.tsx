@@ -16,8 +16,8 @@ export default function Insumos() {
   const [editNeedValue, setEditNeedValue] = useState("");
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState("Water");
-  const [newNeed, setNewNeed] = useState("1");
-  const [newUnit, setNewUnit] = useState("uds");
+  const [newNeed, setNewNeed] = useState("");
+  const [newUnit, setNewUnit] = useState("");
 
   const update = (items: SupplyItem[]) => {
     setSupplies(items);
