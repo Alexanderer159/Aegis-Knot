@@ -15,7 +15,7 @@ export default function Insumos() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNeedValue, setEditNeedValue] = useState("");
   const [newName, setNewName] = useState("");
-  const [newCategory, setNewCategory] = useState("Herramientas");
+  const [newCategory, setNewCategory] = useState("Water");
   const [newNeed, setNewNeed] = useState("1");
   const [newUnit, setNewUnit] = useState("uds");
 
