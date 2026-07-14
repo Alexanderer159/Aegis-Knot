@@ -84,9 +84,9 @@ export default function Grupo() {
                   </p>
                 </div>
 
-                <span className={cn("rounded-sm p-2 text-secondary font-bold text-xs text-white", member.status === "ok" ? "bg-safe/60" : member.status === "help" ? "bg-warning" : 
+                <span className={cn("rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center", member.status === "ok" ? "bg-safe/60" : member.status === "help" ? "bg-warning" : 
                   member.status === "critical" ? "bg-critical" : "bg-muted-foreground")} >
-                  {member.status === "ok" ? "Estado: Ok" : member.status === "help" ? "Estado: Ayuda" : member.status === "critical" ? "Estado: Crítico" : "Sin estado"}
+                  {member.status === "ok" ? "Ok" : member.status === "help" ? "Ayuda" : member.status === "critical" ? "Crítico" : "Offline"}
                 </span>
               </CardContent>
             </Card>
