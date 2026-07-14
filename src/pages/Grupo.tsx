@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { mockPodMembers, roleLabels, roleDescriptions, type RoleType, type StatusType } from "@/lib/store";
+import { loadSupplies, roleCategoryMap, categoryColors, type SupplyItem } from "@/lib/supplies";
 import { useLocalUser } from "@/hooks/useLocalUser";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -26,8 +28,11 @@ export default function Grupo() {
   const { toast } = useToast();
   const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const [sheetRole, setSheetRole] = useState<RoleType | null>(null);
+  const [supplies] = useState<SupplyItem[]>(loadSupplies);
   const selectedMember = selectedRole ? mockPodMembers.find((m) => m.role === selectedRole) : null;
 
+  const relevantCategories = selectedRole ? roleCategoryMap[selectedRole] : [];
+  const filteredSupplies = selectedRole ? supplies.filter((s) => relevantCategories.includes(s.category)): [];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [depName, setDepName] = useState("");
   const [depRelation, setDepRelation] = useState("Familiar");
@@ -62,89 +67,45 @@ export default function Grupo() {
           const isSelected = selectedRole === member.role;
           const isCurrentUser = user?.role === member.role;
           return (
-            <Card
-              key={member.id}
-              className={cn(
-                "tactical-border cursor-pointer transition-all",
-                isSelected && "border-primary/50 glow-green",
-                isCurrentUser && "border-primary/30"
-              )}
-              onClick={() => setSelectedRole(isSelected ? null : member.role)}
-            >
+            <Card key={member.id} className={cn("tactical-border  transition-all", isSelected && "border-primary/50", isCurrentUser && "border-primary/30")}
+              onClick={(e) => { e.stopPropagation(); setSheetRole(member.role); }} >
               <CardContent className="flex items-center gap-3 py-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
+
+                <div className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-primary/50">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
+                
                 <div className="flex-1">
-                  <p className="text-sm font-heading font-bold">
-                    {roleLabels[member.role]}
-                    {isCurrentUser && <span className="text-primary text-xs ml-2">(TÚ)</span>}
+                  <p className="font-semibold">
+                    {roleLabels[member.role]}{isCurrentUser && <span className="text-primary text-xs ml-2">(TÚ)</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {isCurrentUser ? user!.displayName : member.name} — {roleDescriptions[member.role]}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setSheetRole(member.role); }}
-                  className="p-1 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                <span className={cn(
-                  "h-3 w-3 rounded-full",
-                  member.status === "ok" ? "bg-safe" : member.status === "help" ? "bg-warning" : "bg-muted-foreground"
-                )} />
+
+                <span className={cn("rounded-sm p-2 text-secondary font-bold text-xs text-white", member.status === "ok" ? "bg-safe/60" : member.status === "help" ? "bg-warning" : 
+                  member.status === "critical" ? "bg-critical" : "bg-muted-foreground")} >
+                  {member.status === "ok" ? "Estado: Ok" : member.status === "help" ? "Estado: Ayuda" : member.status === "critical" ? "Estado: Crítico" : "Sin estado"}
+                </span>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      {/* Selected Role Detail */}
-      {selectedMember && (
-        <Card className="tactical-border border-primary/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              {(() => { const Icon = roleIcons[selectedMember.role]; return <Icon className="h-4 w-4 text-primary" />; })()}
-              {roleLabels[selectedMember.role]}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/20 text-lg font-bold text-primary">
-                {user?.role === selectedMember.role
-                  ? user.displayName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
-                  : selectedMember.avatar}
-              </div>
-              <div>
-                <p className="font-heading font-bold">
-                  {user?.role === selectedMember.role ? user.displayName : selectedMember.name}
-                </p>
-                <p className="text-xs text-muted-foreground">{roleDescriptions[selectedMember.role]}</p>
-              </div>
-              <Button variant="safe" size="sm" className="ml-auto">
-                <span className="text-xs">ESTADO: OK</span>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Último check-in: {selectedMember.lastCheckIn}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Family Nodes */}
       <Card className="tactical-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
-            NODOS FAMILIARES ({dependents.length})
+            FAMILIARES ({dependents.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {dependents.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-2">
-              No hay dependientes vinculados
+              No hay familares vinculados
             </p>
           )}
           {dependents.map((dep) => (
@@ -165,7 +126,7 @@ export default function Grupo() {
                   removeDependent(dep.id);
                   toast({ title: "Nodo eliminado", description: `${dep.name} fue desvinculado` });
                 }}
-                className="text-muted-foreground hover:text-critical transition-colors p-1"
+                className="text-muted-foreground transition-all p-1"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -225,18 +186,22 @@ export default function Grupo() {
                 </form>
               </DialogContent>
             </Dialog>
-            <Button variant="warning" size="sm" className="flex-1">
+            <Button variant="warning" size="sm" className="flex-1 text-white">
               <Bell className="h-4 w-4 mr-1" />
               Reunir Familia
             </Button>
           </div>
         </CardContent>
       </Card>
+
       {/* Role Detail Sheet */}
       <RoleDetailSheet
         role={sheetRole}
         isCurrentUser={user?.role === sheetRole}
         userName={user?.role === sheetRole ? user.displayName : mockPodMembers.find(m => m.role === sheetRole)?.name || ""}
+        avatar={mockPodMembers.find(m => m.role === sheetRole)?.avatar}
+        status={mockPodMembers.find(m => m.role === sheetRole)?.status}
+        lastCheckIn={mockPodMembers.find(m => m.role === sheetRole)?.lastCheckIn}
         onClose={() => setSheetRole(null)}
       />
     </div>

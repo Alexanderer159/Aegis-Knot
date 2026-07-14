@@ -11,7 +11,7 @@ export function Navbar() {
         <h1 className="text-lg font-heading font-bold tracking-widest text-foreground">AEGIS KNOT</h1>
       </NavLink>
         
-      <NavLink  to="/config" className={({ isActive }) => cn( "p-1 transition-all", isActive ? "text-primary rotate-180" : "text-muted-foreground")}>
+      <NavLink  to="/config" className={({ isActive }) => cn( "p-1 transition-all duration-500", isActive ? "text-primary rotate-180" : "text-muted-foreground")}>
         <Settings />
       </NavLink>
    

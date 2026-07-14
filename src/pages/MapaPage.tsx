@@ -109,7 +109,7 @@ export default function MapaPage() {
         </CardContent>
       </Card>
 
-      <Button variant="safe" className="w-full" size="lg">
+      <Button variant="safe" className="w-full text-white font-bold" size="lg" >
         <Share2 className="h-5 w-5 mr-2" />
         COMPARTIR UBICACIÓN
       </Button>

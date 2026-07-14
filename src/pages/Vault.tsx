@@ -28,7 +28,7 @@ export default function Vault() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-lg md:text-2xl text-center text-muted-foreground">Guías de Supervivencia</h2>
+      <h2 className="text-3xl text-center">GUIAS</h2>
 
       {/* Search */}
       <div className="relative">
@@ -54,9 +54,9 @@ export default function Vault() {
             <Card key={article.id} className={cn("transition-all duration-500", isExpanded && "border-primary")}>
               <CardContent className="py-3">
                 <button onClick={() => setExpandedId(isExpanded ? null : article.id)} className="flex items-center gap-3 w-full text-left">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                  
                     <Icon className="h-5 w-5 text-primary" />
-                  </div>
+                  
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-heading font-semibold truncate">{article.title}</p>
                     <p className="text-xs text-muted-foreground">{article.category} • {article.sections.length} secciones</p>

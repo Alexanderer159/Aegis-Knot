@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Shield, ShieldAlert, AlertTriangle, CheckCircle2, Radio, MapPin, Package, X, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -113,7 +113,7 @@ export default function Dashboard() {
           const isEditing = editingPoint === key;
 
           return (
-            <Card key={key} className="cursor-pointer transition-all" onClick={() => !isEditing && setEditingPoint(key)}>
+            <Card key={key} className=" transition-all" onClick={() => !isEditing && setEditingPoint(key)}>
               <CardContent className="py-3 px-3">
                 {isEditing ? (
                   <div className="space-y-2" onClick={e => e.stopPropagation()}>
@@ -155,7 +155,7 @@ export default function Dashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="tactical-border cursor-pointer hover:border-primary/40 transition-colors" onClick={() => navigate("/insumos")}>
+        <Card className="tactical-border transition-all" onClick={() => navigate("/insumos")}>
           <CardContent className="flex flex-col items-center py-3 px-2">
             <Package className="h-4 w-4 text-primary mb-1" />
             <span className="text-xs text-muted-foreground">Suministros</span>
@@ -172,8 +172,10 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Pod Members */}
-      <Card className="tactical-border">
+      {/* Knot Members */}
+      
+      <Card className="">
+        <NavLink to="/grupo">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-center gap-2">
             <User className="h-7 w-7 text-primary" /> MIEMBROS DEL KNOT
@@ -183,10 +185,7 @@ export default function Dashboard() {
           {podList.map((member) => {
             const isSelf = user?.role === member.role;
             return (
-              <div key={member.id} className={cn(
-                "flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5",
-                isSelf && "border border-primary/20"
-              )}>
+              <div key={member.id} className={cn("flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5", isSelf && "border border-primary/20")}>
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
                   {member.avatar}
                 </div>
@@ -203,7 +202,9 @@ export default function Dashboard() {
             );
           })}
         </CardContent>
+        </NavLink>
       </Card>
+      
 
       {/* Activity Feed */}
       <Card className="tactical-border">

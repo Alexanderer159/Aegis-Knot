@@ -51,7 +51,7 @@ export interface MapMarker {
 // Mock data
 export const mockPodMembers: PodMember[] = [
   { id: "1", name: "Carlos R.", role: "vanguard", avatar: "CR", status: "ok", lastCheckIn: "Hace 5 min" },
-  { id: "2", name: "Ana M.", role: "medic", avatar: "AM", status: "ok", lastCheckIn: "Hace 12 min" },
+  { id: "2", name: "Ana M.", role: "medic", avatar: "AM", status: "critical", lastCheckIn: "Hace 12 min" },
   { id: "3", name: "Luis P.", role: "navigator", avatar: "LP", status: "help", lastCheckIn: "Hace 3 min" },
   { id: "4", name: "María G.", role: "comms", avatar: "MG", status: "ok", lastCheckIn: "Hace 8 min" },
   { id: "5", name: "Diego F.", role: "quartermaster", avatar: "DF", status: null, lastCheckIn: "Hace 45 min" },

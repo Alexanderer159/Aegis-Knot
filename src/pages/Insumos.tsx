@@ -6,65 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-
-interface SupplyItem {
-  id: string;
-  name: string;
-  category: string;
-  have: number;
-  need: number;
-  unit: string;
-  acquired: boolean;
-}
-
-const STORAGE_KEY = "aegis-supplies";
-
-const defaultSupplies: SupplyItem[] = [
-  { id: "w1", name: "Agua potable", category: "Agua", have: 9, need: 18, unit: "L", acquired: false },
-  { id: "w2", name: "Pastillas potabilizadoras", category: "Agua", have: 20, need: 50, unit: "uds", acquired: false },
-  { id: "w3", name: "Filtro portátil", category: "Agua", have: 1, need: 2, unit: "uds", acquired: false },
-  { id: "f1", name: "Raciones de emergencia", category: "Alimentación", have: 12, need: 36, unit: "raciones", acquired: false },
-  { id: "f2", name: "Barras energéticas", category: "Alimentación", have: 10, need: 30, unit: "uds", acquired: false },
-  { id: "f3", name: "Comida enlatada", category: "Alimentación", have: 6, need: 18, unit: "latas", acquired: false },
-  { id: "f4", name: "Sal y azúcar", category: "Alimentación", have: 1, need: 2, unit: "kg", acquired: false },
-  { id: "m1", name: "Vendas y gasas", category: "Médico", have: 3, need: 5, unit: "paq", acquired: false },
-  { id: "m2", name: "Antiséptico", category: "Médico", have: 1, need: 2, unit: "frascos", acquired: false },
-  { id: "m3", name: "Analgésicos", category: "Médico", have: 10, need: 30, unit: "pastillas", acquired: false },
-  { id: "m4", name: "Suero oral", category: "Médico", have: 2, need: 6, unit: "sobres", acquired: false },
-  { id: "m5", name: "Guantes nitrilo", category: "Médico", have: 10, need: 20, unit: "pares", acquired: false },
-  { id: "e1", name: "Baterías AA", category: "Energía", have: 8, need: 24, unit: "uds", acquired: false },
-  { id: "e2", name: "Baterías recargables", category: "Energía", have: 2, need: 4, unit: "uds", acquired: false },
-  { id: "e3", name: "Combustible", category: "Energía", have: 5, need: 20, unit: "L", acquired: false },
-  { id: "e4", name: "Velas", category: "Energía", have: 6, need: 12, unit: "uds", acquired: false },
-  { id: "t1", name: "Cuerda / paracord", category: "Herramientas", have: 15, need: 50, unit: "m", acquired: false },
-  { id: "t2", name: "Cinta adhesiva", category: "Herramientas", have: 1, need: 3, unit: "rollos", acquired: false },
-  { id: "t3", name: "Multiherramienta", category: "Herramientas", have: 1, need: 2, unit: "uds", acquired: false },
-  { id: "t4", name: "Lona impermeable", category: "Herramientas", have: 1, need: 2, unit: "uds", acquired: false },
-  { id: "c1", name: "Radio portátil", category: "Comunicaciones", have: 1, need: 2, unit: "uds", acquired: false },
-  { id: "c2", name: "Silbato emergencia", category: "Comunicaciones", have: 2, need: 6, unit: "uds", acquired: false },
-  { id: "c3", name: "Bengalas", category: "Comunicaciones", have: 0, need: 4, unit: "uds", acquired: false },
-];
-
-function loadSupplies(): SupplyItem[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return defaultSupplies;
-}
-
-function saveSupplies(items: SupplyItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
-
-const categoryColors: Record<string, string> = {
-  Agua: "border-blue-500/40 border-2 text-blue-400 font-semibold bg-secondary",
-  Alimentación: "border-amber-500/40 border-2 text-amber-400 font-semibold bg-secondary",
-  Médico: "border-red-500/20 border-2 text-red-400 font-semibold bg-secondary",
-  Energía: "border-yellow-500/20 border-2 text-yellow-400 font-semibold bg-secondary",
-  Herramientas: "border-primary/20 border-2 text-primary font-semibold bg-secondary",
-  Comunicaciones: "border-purple-500/20 border-2 text-purple-400 font-semibold bg-secondary",
-};
+import {type SupplyItem,loadSupplies, saveSupplies, categoryColors,} from "@/lib/supplies";
 
 export default function Insumos() {
   const [supplies, setSupplies] = useState<SupplyItem[]>(loadSupplies);
@@ -140,7 +82,7 @@ export default function Insumos() {
     <div className="space-y-5">
       {/* Header Stats */}
       <section className="space-y-3">
-        <h2 className="text-3xl text-center text-foreground">Lista de Suministros</h2>
+        <h2 className="text-3xl text-center text-foreground">SUMINISTROS</h2>
         <Card className="">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -179,25 +121,19 @@ export default function Insumos() {
           const isComplete = item.have >= item.need;
 
           return (
-            <Card key={item.id} className={cn(
-              "transition-all",
-              item.acquired && "opacity-50"
-            )}>
+            <Card key={item.id} className="transition-all">
               <CardContent className="py-3 px-4">
                 <div className="flex items-center gap-3">
                   {/* Check button */}
-                  <button onClick={() => toggleAcquired(item.id)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                      item.acquired ? "bg-primary border-primary" : isComplete ? "border-primary/50" : "border-muted-foreground/30")}>
+                  <button onClick={() => toggleAcquired(item.id)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                      item.acquired ? "bg-primary border-primary" : isComplete ? "border-primary" : "border-muted-foreground/30")}>
                     {item.acquired && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
                   </button>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={cn(
-                        "text-sm font-heading font-semibold truncate",
-                        item.acquired && "line-through text-muted-foreground"
-                      )}>
+                      <span className={cn("text-sm font-heading font-semibold truncate", item.acquired && "text-muted-foreground")}>
                         {item.name}
                       </span>
                       <span className={cn(
@@ -226,7 +162,7 @@ export default function Insumos() {
                       ) : (
                         <button
                           onClick={() => startEditNeed(item)}
-                          className="flex items-center gap-1 shrink-0 hover:text-primary transition-colors"
+                          className="flex items-center gap-1 shrink-0 transition-all"
                         >
                           <span className={cn(
                             "text-xs font-mono",
@@ -247,21 +183,20 @@ export default function Insumos() {
 
                   {/* Controls */}
                   <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => decrement(item.id)}
-                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-accent transition-colors"
+                    <button onClick={() => decrement(item.id)}
+                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center transition-all"
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => increment(item.id)}
-                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-accent transition-colors"
+                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center transition-all"
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center text-muted-foreground transition-all"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

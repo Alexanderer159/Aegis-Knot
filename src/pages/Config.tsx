@@ -178,13 +178,10 @@ export default function Config() {
         </CardContent>
       </Card>
 
-      <Button variant="outline" className="w-full border-critical/50 text-critical hover:bg-critical/10" onClick={logout}>
-        <LogOut className="h-4 w-4 mr-2" /> CERRAR SESIÓN
+      <Button variant="outline" className="w-full border-critical/50 text-critical" onClick={logout}>
+        <LogOut className="h-4 w-4 mr-2" /> SALIR DE KNOT
       </Button>
 
-      <p className="text-center text-xs text-muted-foreground font-mono pt-2">
-        AEGIS KNOT v1.0.0 — TACTICAL SURVIVAL PWA
-      </p>
     </div>
   );
 }
