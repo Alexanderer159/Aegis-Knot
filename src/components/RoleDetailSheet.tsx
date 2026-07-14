@@ -103,33 +103,24 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
         </SheetHeader>
 
         {/* Member Status Block */}
-        <div className="flex items-center gap-3 pb-3 mb-2 border-b border-border/50">
+        <div className="flex items-center pb-3">
           <div className="flex-1 min-w-0">
             <p className="font-heading font-bold truncate text-xl">{userName}</p>
             {lastCheckIn && (
               <p className="text-xs text-muted-foreground">Último check-in: {lastCheckIn}</p>
             )}
           </div>
-          <Button
-            variant={status === "ok" ? "safe" : status === "help" ? "warning" : "outline"}
-            size="sm"
-            className="shrink-0"
-          >
-            <span className="text-xs">
-              ESTADO: {status === "ok" ? "OK" : status === "help" ? "AYUDA" : "—"}
+          <Button variant={status === "ok" ? "safe" : status === "help" ? "warning" : status === "critical" ? "critical" : "outline"} size="sm" className="shrink-0">
+            <span className="text-sm text-white">
+              {status === "ok" ? "Ok" : status === "help" ? "Ayuda" : status === "critical" ? "Crítico" : "Offline"}
             </span>
           </Button>
         </div>
 
         <div className="space-y-1 max-h-[45vh] overflow-y-auto pr-1">
-          <div className="flex items-center gap-2 pb-2">
-            {isTaskRole ? (
-              <ClipboardList className="h-4 w-4 text-primary" />
-            ) : (
-              <ListChecks className="h-4 w-4 text-primary" />
-            )}
-            <span className="text-xs font-heading text-muted-foreground tracking-wider">
-              {isTaskRole ? "AGENDA / TAREAS" : "INVENTARIO / INSUMOS"}
+          <div className="flex items-center pb-2">
+            <span className="text-sm tracking-widest text-center w-full">
+              {isTaskRole ? "TAREAS" : "INVENTARIO"}
             </span>
           </div>
 

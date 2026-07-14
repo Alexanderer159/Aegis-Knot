@@ -5,6 +5,7 @@ import { mockMarkers } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { usePodLocations } from "@/hooks/useLocationSharing";
+import AegisMap from "@/components/AegisMap";
 
 
 const markerIcons: Record<string, React.ElementType> = {
@@ -70,6 +71,9 @@ export default function MapaPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Map Preview */}
+      <AegisMap heightClass="h-48" />
 
       {/* Map Controls */}
       <Card className="tactical-border">
