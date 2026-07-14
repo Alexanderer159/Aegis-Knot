@@ -58,7 +58,7 @@ export default function Grupo() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl text-center">KNOT</h2>
+      <h2 className="text-3xl text-center">YOUR KNOT</h2>
 
       {/* Role Cards */}
       <div className="space-y-2">
@@ -77,7 +77,7 @@ export default function Grupo() {
                 
                 <div className="flex-1">
                   <p className="font-semibold">
-                    {roleLabels[member.role]}{isCurrentUser && <span className="text-primary text-xs ml-2">(TÚ)</span>}
+                    {roleLabels[member.role]}{isCurrentUser && <span className="text-primary text-xs ml-2">(You)</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {isCurrentUser ? user!.displayName : member.name} — {roleDescriptions[member.role]}
@@ -86,7 +86,7 @@ export default function Grupo() {
 
                 <span className={cn("rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center", member.status === "ok" ? "bg-safe/60" : member.status === "help" ? "bg-warning" : 
                   member.status === "critical" ? "bg-critical" : "bg-muted-foreground")} >
-                  {member.status === "ok" ? "Ok" : member.status === "help" ? "Ayuda" : member.status === "critical" ? "Crítico" : "Offline"}
+                  {member.status === "ok" ? "Ok" : member.status === "help" ? "Help" : member.status === "critical" ? "Critical" : "Offline"}
                 </span>
               </CardContent>
             </Card>
@@ -99,13 +99,13 @@ export default function Grupo() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
-            FAMILIARES ({dependents.length})
+            FAMILY ({dependents.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {dependents.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-2">
-              No hay familares vinculados
+              No linked family members
             </p>
           )}
           {dependents.map((dep) => (
@@ -138,57 +138,52 @@ export default function Grupo() {
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="flex-1">
                   <UserPlus className="h-4 w-4 mr-1" />
-                  Vincular
+                  Link
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-sm">
                 <DialogHeader>
-                  <DialogTitle>Vincular Dependiente</DialogTitle>
+                  <DialogTitle>Link Member</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleAddDependent} className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label>Nombre</Label>
+                    <Label>Name</Label>
                     <Input
                       value={depName}
                       onChange={(e) => setDepName(e.target.value)}
-                      placeholder="Nombre completo"
+                      placeholder="Full Name"
                       className="bg-secondary border-border"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Relación</Label>
+                    <Label>Relationship</Label>
                     <Select value={depRelation} onValueChange={setDepRelation}>
                       <SelectTrigger className="bg-secondary border-border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Hijo/a">Hijo/a</SelectItem>
-                        <SelectItem value="Pareja">Pareja</SelectItem>
-                        <SelectItem value="Padre/Madre">Padre/Madre</SelectItem>
-                        <SelectItem value="Familiar">Familiar</SelectItem>
-                        <SelectItem value="Otro">Otro</SelectItem>
+                        <SelectItem value="Hijo/a">Son/Daughter</SelectItem>
+                        <SelectItem value="Pareja">Partner</SelectItem>
+                        <SelectItem value="Padre/Madre">Parent</SelectItem>
+                        <SelectItem value="Familiar">Member</SelectItem>
+                        <SelectItem value="Otro">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Ubicación habitual</Label>
-                    <Input
-                      value={depLocation}
-                      onChange={(e) => setDepLocation(e.target.value)}
-                      placeholder="Casa, trabajo, escuela..."
-                      className="bg-secondary border-border"
-                    />
+                    <Label>Usual Location</Label>
+                    <Input value={depLocation} onChange={(e) => setDepLocation(e.target.value)} placeholder="Home, Work, School..." className="bg-secondary border-border"/>
                   </div>
-                  <Button type="submit" variant="safe" className="w-full">
-                    <UserPlus className="h-4 w-4 mr-2" /> VINCULAR
+                  <Button type="submit" variant="safe" className="w-full text-white font-semibold">
+                    <UserPlus className="h-4 w-4 mr-2" /> Link
                   </Button>
                 </form>
               </DialogContent>
             </Dialog>
             <Button variant="warning" size="sm" className="flex-1 text-white">
               <Bell className="h-4 w-4 mr-1" />
-              Reunir Familia
+              Reunite Family
             </Button>
           </div>
         </CardContent>

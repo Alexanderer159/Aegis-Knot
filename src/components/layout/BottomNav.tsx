@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/grupo", icon: Users, label: "Knot" },
-  { to: "/mapa", icon: Map, label: "Mapa" },
-  { to: "/insumos", icon: Package, label: "Suministros" },
-  { to: "/vault", icon: BookOpen, label: "Vault" },
+  { to: "/mapa", icon: Map, label: "Map" },
+  { to: "/insumos", icon: Package, label: "Supplies" },
+  { to: "/vault", icon: BookOpen, label: "Guides" },
 ];
 
 export function BottomNav() {

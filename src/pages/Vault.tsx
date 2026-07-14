@@ -12,15 +12,15 @@ const typeIcons: Record<string, React.ElementType> = {
   guide: BookMarked,
 };
 
-const categories = ["Todos", "Primeros Auxilios", "Supervivencia", "Comunicaciones", "Refugio"];
+const categories = ["All", "First Aid", "Survival", "Communications", "Shelter"];
 
 export default function Vault() {
-  const [selectedCat, setSelectedCat] = useState("Todos");
+  const [selectedCat, setSelectedCat] = useState("All");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filtered = knowledgeBase.filter((a) => {
-    const matchCat = selectedCat === "Todos" || a.category === selectedCat;
+    const matchCat = selectedCat === "All" || a.category === selectedCat;
     const matchSearch = a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.sections.some(s => s.title.toLowerCase().includes(search.toLowerCase()) || s.content.toLowerCase().includes(search.toLowerCase()));
     return matchCat && matchSearch;
@@ -28,18 +28,18 @@ export default function Vault() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl text-center">GUIAS</h2>
+      <h2 className="text-3xl text-center">GUIDES</h2>
 
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar protocolo..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-secondary border-border"/>
+        <Input placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-secondary border-border"/>
       </div>
 
       {/* Category Tabs */}
       <div className="grid gap-2 ">
         {categories.map((cat) => (
-          <Button key={cat} onClick={() => setSelectedCat(cat)} className={selectedCat === cat ? "bg-primary text-secondary" : "border bg-secondary text-white"} >
+          <Button key={cat} onClick={() => setSelectedCat(cat)} className={selectedCat === cat ? "bg-primary text-white font-semibold" : "bg-secondary text-white font-semibold"} >
             {cat}
           </Button>
         ))}
@@ -59,7 +59,7 @@ export default function Vault() {
                   
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-heading font-semibold truncate">{article.title}</p>
-                    <p className="text-xs text-muted-foreground">{article.category} • {article.sections.length} secciones</p>
+                    <p className="text-xs text-muted-foreground">{article.category} • {article.sections.length} sections</p>
                   </div>
                   <ChevronUp className={isExpanded ? `h-4 w-4 text-primary shrink-0 rotate-180 duration-300 transition-all` : `h-4 w-4 text-muted-foreground shrink-0 duration-300 transition-all`} />  
                 </button>

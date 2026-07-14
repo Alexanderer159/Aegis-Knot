@@ -18,7 +18,7 @@ const markerIcons: Record<string, React.ElementType> = {
 const markerColors: Record<string, string> = {
   meeting: "text-primary",
   danger: "text-critical",
-  resource: "text-blue-400",
+  resource: "text-blue-500",
   shelter: "text-warning",
 };
 
@@ -34,7 +34,7 @@ export default function MapaPage() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl text-center">MAPA</h2>
+      <h2 className="text-3xl text-center">MAP</h2>
 
 
 
@@ -44,7 +44,7 @@ export default function MapaPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              MIEMBROS EN LÍNEA ({podMembers.length})
+              ONLINE MEMBERS ({podMembers.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -73,20 +73,20 @@ export default function MapaPage() {
       )}
 
       {/* Map Preview */}
-      <AegisMap heightClass="h-48" />
+      <AegisMap heightClass="h-48 z-0" />
 
       {/* Map Controls */}
       <Card className="tactical-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">MAPAS OFFLINE</CardTitle>
+          <CardTitle className="text-base">Offline Map</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm">Descargar Mapas de Ciudad</span>
+            <span className="text-sm">Download city maps</span>
             <Switch />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm">Puntos de Recursos</span>
+            <span className="text-sm">Points of interest</span>
             <Switch defaultChecked />
           </div>
         </CardContent>
@@ -95,19 +95,19 @@ export default function MapaPage() {
       {/* Points of Interest */}
       <Card className="tactical-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">PUNTOS DE ENCUENTRO</CardTitle>
+          <CardTitle className="text-base">Points Of Interest</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {mockMarkers.filter(m => m.type === "meeting").map((marker) => (
+          {mockMarkers.map((marker) => (
             <div key={marker.id} className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5">
-              <MapPin className="h-4 w-4 text-primary" />
+              <MapPin className="h-5 w-5 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-heading font-semibold">{marker.name}</p>
                 <p className="text-xs text-muted-foreground font-mono">
-                  {marker.lat.toFixed(3)}, {marker.lng.toFixed(3)}
+                  {marker.lat}, {marker.lng}
                 </p>
               </div>
-              <Navigation className="h-4 w-4 text-muted-foreground" />
+              <Navigation className="h-5 w-5 text-primary/50" />
             </div>
           ))}
         </CardContent>
@@ -115,7 +115,7 @@ export default function MapaPage() {
 
       <Button variant="safe" className="w-full text-white font-bold" size="lg" >
         <Share2 className="h-5 w-5 mr-2" />
-        COMPARTIR UBICACIÓN
+        Share Location
       </Button>
     </div>
   );

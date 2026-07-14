@@ -82,23 +82,23 @@ export default function Insumos() {
     <div className="space-y-5">
       {/* Header Stats */}
       <section className="space-y-3">
-        <h2 className="text-3xl text-center text-foreground">SUMINISTROS</h2>
+        <h2 className="text-3xl text-center text-foreground">SUPPLIES</h2>
         <Card className="">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
 
               <div className="flex items-center gap-2">
                 <Package className="h-7 w-7 text-primary" />
-                <span className="font-heading font-bold text-lg">{overallPercent}% COMPLETO</span>
+                <span className="font-heading font-bold text-lg">{overallPercent}% COMPLETE</span>
               </div>
 
-              <Badge variant="outline" className="border-primary/50">{pendingCount} pendientes</Badge>
+              <Badge variant="outline" className="border-primary/50">{pendingCount} left</Badge>
 
             </div>
             <Progress value={overallPercent} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{completedItems} de {totalItems} ítems cubiertos</span>
-              <span>{supplies.filter(s => s.have < s.need).reduce((acc, s) => acc + (s.need - s.have), 0)} unidades por adquirir</span>
+              <span>{completedItems} of {totalItems} complete</span>
+              <span>{supplies.filter(s => s.have < s.need).reduce((acc, s) => acc + (s.need - s.have), 0)} left to pick</span>
             </div>
           </CardContent>
         </Card>
@@ -108,7 +108,7 @@ export default function Insumos() {
       <div className="grid grid-cols-2 gap-2 overflow-x-auto pb-1 ">
         {categories.map(cat => (
           <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary/70" : "bg-secondary")}>
-            {cat === "all" ? "Todos" : cat}
+            {cat === "all" ? "All" : cat}
           </button>
         ))}
       </div>
@@ -176,7 +176,7 @@ export default function Insumos() {
                     </div>
                     {missing > 0 && !item.acquired && (
                       <span className="text-[10px] text-warning">
-                        Faltan {missing} {item.unit}
+                        {missing} {item.unit}
                       </span>
                     )}
                   </div>
@@ -212,11 +212,11 @@ export default function Insumos() {
       {showAdd ? (
         <Card className="tactical-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">AGREGAR INSUMO</CardTitle>
+            <CardTitle className="text-md text-center">Add Supply</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Input
-              placeholder="Nombre del insumo"
+              placeholder="Supply Name"
               value={newName}
               onChange={e => setNewName(e.target.value)}
               className="bg-secondary"
@@ -227,37 +227,37 @@ export default function Insumos() {
                 onChange={e => setNewCategory(e.target.value)}
                 className="rounded-md bg-secondary border border-border px-2 py-2 text-sm text-foreground"
               >
-                {["Agua", "Alimentación", "Médico", "Energía", "Herramientas", "Comunicaciones"].map(c => (
+                {["Water", "Food", "Medicine", "Energy", "Tools", "Communications"].map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
               <Input
-                placeholder="Cant."
+                placeholder="Amount"
                 type="number"
                 value={newNeed}
                 onChange={e => setNewNeed(e.target.value)}
                 className="bg-secondary"
               />
               <Input
-                placeholder="Unidad"
+                placeholder="Unit"
                 value={newUnit}
                 onChange={e => setNewUnit(e.target.value)}
                 className="bg-secondary"
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={addItem} size="sm" className="flex-1">
-                <Plus className="h-4 w-4 mr-1" /> Agregar
+              <Button onClick={addItem} size="sm" className="flex-1 text-white">
+                <Plus className="h-4 w-4 mr-1" /> Add
               </Button>
               <Button onClick={() => setShowAdd(false)} size="sm" variant="outline" className="flex-1">
-                Cancelar
+                Cancel
               </Button>
             </div>
           </CardContent>
         </Card>
       ) : (
         <Button onClick={() => setShowAdd(true)} variant="outline" className="w-full tactical-border">
-          <Plus className="h-4 w-4 mr-2" /> Agregar insumo
+          <Plus className="h-4 w-4 mr-2" /> Add Supply
         </Button>
       )}
     </div>

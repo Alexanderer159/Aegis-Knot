@@ -25,12 +25,12 @@ export default function Config() {
     e.preventDefault();
     if (code.toUpperCase() !== GROUP_CODE) {
       setCodeError(true);
-      toast({ title: "Código inválido", description: "El código de grupo no es correcto.", variant: "destructive" });
+      toast({ title: "Invalid Code", description: "The group code is incorrect.", variant: "destructive" });
       return;
     }
     if (!name.trim()) return;
     setupUser(name.trim(), role, code.toUpperCase());
-    toast({ title: "¡Bienvenido al Knot!", description: `Rol asignado: ${roleLabels[role]}` });
+    toast({ title: "Welcome to the Knot!", description: `Assigned Role: ${roleLabels[role]}` });
   };
 
   // Not setup — show onboarding
@@ -42,23 +42,23 @@ export default function Config() {
 
           <CardHeader className="">
             <CardTitle className="text-lg flex items-center justify-center gap-2">
-              <KeyRound className="h-5 w-5 text-primary" /> UNIRSE A UN KNOT
+              <KeyRound className="h-5 w-5 text-primary" /> JOIN A KNOT
             </CardTitle>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSetup} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="code">Código de Grupo</Label>
-                <Input id="code" value={code} onChange={(e) => { setCode(e.target.value); setCodeError(false); }} placeholder="Ingresa el código"
-                  className={`bg-secondary border-border font-mono uppercase ${codeError ? "border-critical" : ""}`} required />
+                <Label htmlFor="code">Group Code</Label>
+                <Input id="code" value={code} onChange={(e) => { setCode(e.target.value); setCodeError(false); }} placeholder="Input code"
+                  className={`bg-secondary border-border ${codeError ? "border-critical" : ""}`} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre de Operador</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" className="bg-secondary border-border" required />
+                <Label htmlFor="name">Operator Name</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="bg-secondary border-border" required />
               </div>
               <div className="space-y-2">
-                <Label>Rol Operativo</Label>
+                <Label>Operator Role</Label>
                 <Select value={role} onValueChange={(v) => setRole(v as RoleType)}>
                   <SelectTrigger className="bg-secondary border-border">
                     <SelectValue />
@@ -73,7 +73,7 @@ export default function Config() {
                 </Select>
               </div>
               <Button type="submit" variant="safe" className="w-full" size="lg">
-                <LogIn className="h-5 w-5 mr-2" /> INGRESAR
+                <LogIn className="h-5 w-5 mr-2" /> Log In
               </Button>
             </form>
           </CardContent>
@@ -85,17 +85,17 @@ export default function Config() {
   // Already set up — show config
   return (
     <div className="space-y-5">
-      <h2 className="text-sm font-heading text-muted-foreground tracking-widest">CONFIGURACIÓN</h2>
+      <h2 className="text-3xl text-center font-heading tracking-widest">PROFILE</h2>
 
       {/* Profile */}
       <Card className="tactical-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xs text-muted-foreground">PERFIL</CardTitle>
+          <CardTitle className="text-xs text-muted-foreground">Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-3 px-2 py-2">
             <User className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Nombre de Operador</span>
+            <span className="text-sm flex-1">Operator Name</span>
             <Input
               value={user!.displayName}
               onChange={(e) => updateName(e.target.value)}
@@ -104,7 +104,7 @@ export default function Config() {
           </div>
           <div className="flex items-center gap-3 px-2 py-2">
             <Shield className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Rol Actual</span>
+            <span className="text-sm flex-1">Knot Role</span>
             <Select value={user!.role} onValueChange={(v) => updateRole(v as RoleType)}>
               <SelectTrigger className="w-40 h-8 text-xs bg-secondary border-border">
                 <SelectValue />
@@ -124,17 +124,17 @@ export default function Config() {
       {/* Connectivity */}
       <Card className="tactical-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xs text-muted-foreground">CONECTIVIDAD</CardTitle>
+          <CardTitle className="text-xs text-muted-foreground">Connection</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           <div className="flex items-center gap-3 px-2 py-2.5">
             <Wifi className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Modo Offline</span>
+            <span className="text-sm flex-1">Offline Mode</span>
             <Switch />
           </div>
           <div className="flex items-center gap-3 px-2 py-2.5">
             <WifiOff className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Red Mesh Simulada</span>
+            <span className="text-sm flex-1">Simulated Web Mesh</span>
             <Switch defaultChecked />
           </div>
         </CardContent>
@@ -143,17 +143,17 @@ export default function Config() {
       {/* Notifications */}
       <Card className="tactical-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xs text-muted-foreground">NOTIFICACIONES</CardTitle>
+          <CardTitle className="text-xs text-muted-foreground">Notifications</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           <div className="flex items-center gap-3 px-2 py-2.5">
             <Bell className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Alertas Críticas</span>
+            <span className="text-sm flex-1">Crítical Alerts</span>
             <Switch defaultChecked />
           </div>
           <div className="flex items-center gap-3 px-2 py-2.5">
             <Volume2 className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Señales Acústicas</span>
+            <span className="text-sm flex-1">Notification Sounds</span>
             <Switch />
           </div>
         </CardContent>
@@ -162,24 +162,24 @@ export default function Config() {
       {/* System */}
       <Card className="tactical-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xs text-muted-foreground">SISTEMA</CardTitle>
+          <CardTitle className="text-xs text-muted-foreground">System</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           <div className="flex items-center gap-3 px-2 py-2.5">
             <Battery className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Ahorro de Energía</span>
+            <span className="text-sm flex-1">Energy saving</span>
             <Switch />
           </div>
           <div className="flex items-center gap-3 px-2 py-2.5">
             <Moon className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm flex-1">Modo Nocturno</span>
+            <span className="text-sm flex-1">Night Mode</span>
             <Switch defaultChecked />
           </div>
         </CardContent>
       </Card>
 
       <Button variant="outline" className="w-full border-critical/50 text-critical" onClick={logout}>
-        <LogOut className="h-4 w-4 mr-2" /> SALIR DE KNOT
+        <LogOut className="h-4 w-4 mr-2" /> LEAVE KNOT
       </Button>
 
     </div>

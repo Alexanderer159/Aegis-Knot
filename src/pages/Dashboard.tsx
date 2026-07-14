@@ -91,15 +91,15 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-3">
           <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-primary", userStatus === "ok" && "ring-2 ring-safe ")} onClick={() => updateStatus("ok")}>
             <CheckCircle2 className="h-6 w-6" />
-            <span className="text-xs">ESTOY BIEN</span>
+            <span className="text-xs">I´M OK</span>
           </Button>
           <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-warning", userStatus === "help" && "ring-2 ring-warning")} onClick={() => updateStatus("help")}>
             <AlertTriangle className="h-6 w-6" />
-            <span className="text-xs">AYUDA</span>
+            <span className="text-xs">HELP</span>
           </Button>
           <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-critical", userStatus === "critical" && "ring-2 ring-critical")} onClick={() => updateStatus("critical")}>
             <ShieldAlert className="h-6 w-6" />
-            <span className="text-xs">CRÍTICO</span>
+            <span className="text-xs">CRITICAL</span>
           </Button>
         </div>
 
@@ -118,21 +118,21 @@ export default function Dashboard() {
                 {isEditing ? (
                   <div className="space-y-2" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-heading text-primary">PUNTO {label}</span>
+                      <span className="text-xs font-heading text-primary">POINT {label}</span>
                       <button onClick={() => setEditingPoint(null)}>
                         <X className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     </div>
-                    <Input placeholder="Latitud" value={wp.lat}  onChange={e => updateWaypoint(key, "lat", e.target.value)} className="h-7 text-xs bg-secondary"/>
-                    <Input placeholder="Longitud" value={wp.lng} onChange={e => updateWaypoint(key, "lng", e.target.value)} className="h-7 text-xs bg-secondary"/>
-                    <Button size="sm" className="w-full h-7 font-bold text-black" onClick={() => setEditingPoint(null)}>Guardar</Button>
+                    <Input placeholder="Latitude" value={wp.lat}  onChange={e => updateWaypoint(key, "lat", e.target.value)} className="h-7 text-xs bg-secondary"/>
+                    <Input placeholder="Longitude" value={wp.lng} onChange={e => updateWaypoint(key, "lng", e.target.value)} className="h-7 text-xs bg-secondary"/>
+                    <Button size="sm" className="w-full h-7 font-bold text-black" onClick={() => setEditingPoint(null)}>Save</Button>
                   </div>
                 ) : (
                   <div className="flex gap-1 flex-col items-center">
                     
                     <MapPin className="h-5 w-5 text-primary mb-1" />
 
-                    <span className="text-xs text-muted-foreground">Punto</span>
+                    <span className="text-xs text-muted-foreground">Point</span>
 
                     <span className="text-sm font-heading font-bold text-foreground">{label}</span>
 
@@ -142,7 +142,7 @@ export default function Dashboard() {
                         {parseFloat(wp.lat).toFixed(4)}, {parseFloat(wp.lng).toFixed(4)}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">Toca para definir</span>
+                      <span className="text-xs text-muted-foreground">Tap to define</span>
                     )}
 
                   </div>
@@ -158,7 +158,7 @@ export default function Dashboard() {
         <Card className="tactical-border transition-all" onClick={() => navigate("/insumos")}>
           <CardContent className="flex flex-col items-center py-3 px-2">
             <Package className="h-4 w-4 text-primary mb-1" />
-            <span className="text-xs text-muted-foreground">Suministros</span>
+            <span className="text-xs text-muted-foreground">Supplies</span>
             <span className={cn("text-sm font-heading font-bold", supplyPercent >= 75 ? "text-primary" : supplyPercent >= 40 ? "text-warning" : "text-critical")}>{supplyPercent}%</span>
             <Progress value={supplyPercent} className="h-1 mt-1 w-full" />
           </CardContent>
@@ -178,7 +178,7 @@ export default function Dashboard() {
         <NavLink to="/grupo">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-center gap-2">
-            <User className="h-7 w-7 text-primary" /> MIEMBROS DEL KNOT
+            <User className="h-7 w-7 text-primary" /> KNOT MEMBERS
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -192,7 +192,7 @@ export default function Dashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-heading font-semibold truncate">
                     {member.name}
-                    {isSelf && <span className="text-primary text-xs ml-1">(TÚ)</span>}
+                    {isSelf && <span className="text-primary text-xs ml-1">(YOU)</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">{roleLabels[member.role]}</p>
                 </div>
@@ -209,7 +209,7 @@ export default function Dashboard() {
       {/* Activity Feed */}
       <Card className="tactical-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">FEED DE ACTIVIDAD</CardTitle>
+          <CardTitle className="text-base text-center">ACTIVITY FEED</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {activity.slice(0, 6).map((item) => (

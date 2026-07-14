@@ -107,12 +107,12 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
           <div className="flex-1 min-w-0">
             <p className="font-heading font-bold truncate text-xl">{userName}</p>
             {lastCheckIn && (
-              <p className="text-xs text-muted-foreground">Último check-in: {lastCheckIn}</p>
+              <p className="text-xs text-muted-foreground">Last check-in: {lastCheckIn}</p>
             )}
           </div>
           <Button variant={status === "ok" ? "safe" : status === "help" ? "warning" : status === "critical" ? "critical" : "outline"} size="sm" className="shrink-0">
             <span className="text-sm text-white">
-              {status === "ok" ? "Ok" : status === "help" ? "Ayuda" : status === "critical" ? "Crítico" : "Offline"}
+              {status === "ok" ? "Ok" : status === "help" ? "Help" : status === "critical" ? "Critical" : "Offline"}
             </span>
           </Button>
         </div>
@@ -120,7 +120,7 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
         <div className="space-y-1 max-h-[45vh] overflow-y-auto pr-1">
           <div className="flex items-center pb-2">
             <span className="text-sm tracking-widest text-center w-full">
-              {isTaskRole ? "TAREAS" : "INVENTARIO"}
+              {isTaskRole ? "TASKS" : "INVENTORY"}
             </span>
           </div>
 

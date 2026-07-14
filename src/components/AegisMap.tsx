@@ -66,7 +66,7 @@ function getDefaultCenter(): [number, number] {
     const avgLng = mockMarkers.reduce((s, m) => s + m.lng, 0) / mockMarkers.length;
     return [avgLat, avgLng];
   }
-  return [38.6989, -0.4738]; // fallback: Alcoy
+  return [38.6989, -0.4738];
 }
 
 interface Props {
@@ -91,10 +91,7 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
       className="w-full h-full"
     >
       {fullscreen && <InvalidateOnMount />}
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
       {mockMarkers.map((marker) => (
         <Marker key={marker.id} position={[marker.lat, marker.lng]} icon={poiIcon(marker.type)}>
@@ -106,11 +103,7 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
 
       {podMembers.map((member) => (
         member.latitude && member.longitude && (
-          <Marker
-            key={member.id}
-            position={[member.latitude, member.longitude]}
-            icon={memberIcon(member.status)}
-          >
+          <Marker key={member.id} position={[member.latitude, member.longitude]} icon={memberIcon(member.status)}>
             <Popup>
               <span className="font-semibold">{member.display_name}</span>
             </Popup>
@@ -125,11 +118,7 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
       {/* Compact Preview */}
       <div
         onClick={() => setFullscreen(true)}
-        className={cn(
-          "relative w-full rounded-lg overflow-hidden tactical-border cursor-pointer group",
-          heightClass
-        )}
-      >
+        className={cn("relative w-full rounded-lg overflow-hidden tactical-border cursor-pointer group", heightClass)}>
         <div className="pointer-events-none absolute inset-0 z-[400]">
           <MapBody interactive={false} />
         </div>
@@ -142,12 +131,9 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
 
       {/* Fullscreen Overlay */}
       {fullscreen && (
-        <div className="fixed inset-0 z-[1000] bg-background">
-          <button
-            onClick={() => setFullscreen(false)}
-            className="absolute top-4 right-4 z-[1100] bg-card border border-border rounded-full p-2 shadow-lg"
-          >
-            <X className="h-5 w-5" />
+        <div className="fixed inset-0 -top-5 z-[1000] bg-background">
+          <button onClick={() => setFullscreen(false)} className="absolute top-4 right-4 z-[1100] bg-card border border-border rounded-full p-2 ">
+            <X className="h-5 w-5 text-primary" />
           </button>
           <div className="w-full h-full">
             <MapBody interactive={true} />
