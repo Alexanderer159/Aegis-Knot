@@ -107,7 +107,7 @@ export default function Insumos() {
       {/* Category Filter */}
       <div className="grid grid-cols-2 gap-2 overflow-x-auto pb-1 ">
         {categories.map(cat => (
-          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary/70" : "bg-secondary")}>
+          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary" : "bg-secondary")}>
             {cat === "all" ? "All" : cat}
           </button>
         ))}
@@ -256,7 +256,7 @@ export default function Insumos() {
           </CardContent>
         </Card>
       ) : (
-        <Button onClick={() => setShowAdd(true)} variant="outline" className="w-full tactical-border">
+        <Button onClick={() => setShowAdd(true)} variant="outline" className="w-full">
           <Plus className="h-4 w-4 mr-2" /> Add Supply
         </Button>
       )}

@@ -1,88 +1,52 @@
-import { useState } from "react";
-import { User, Bell, Shield, Wifi, WifiOff, Battery, Moon, Volume2, ChevronRight, LogIn, LogOut, KeyRound } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, Bell, Shield, Wifi, WifiOff, Battery, Moon, Volume2, LogOut, Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLocalUser, GROUP_CODE } from "@/hooks/useLocalUser";
-import { roleLabels, roleDescriptions, type RoleType } from "@/lib/store";
+import { useLocalUser } from "@/hooks/useLocalUser";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { roleLabels } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 
-const allRoles: RoleType[] = ["vanguard", "medic", "navigator", "comms", "quartermaster", "builder"];
-
 export default function Config() {
-  const { user, isSetup, setupUser, updateRole, updateName, logout } = useLocalUser();
+  const { user, updateName } = useLocalUser();
+  const { signOut } = useAuth();
   const { toast } = useToast();
 
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<RoleType>("vanguard");
-  const [code, setCode] = useState("");
-  const [codeError, setCodeError] = useState(false);
+  const [nameInput, setNameInput] = useState(user?.displayName ?? "");
+  const [knotCode, setKnotCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const handleSetup = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (code.toUpperCase() !== GROUP_CODE) {
-      setCodeError(true);
-      toast({ title: "Invalid Code", description: "The group code is incorrect.", variant: "destructive" });
-      return;
+  useEffect(() => {
+    if (!user?.knotId) return;
+    supabase
+      .from("knots")
+      .select("code")
+      .eq("id", user.knotId)
+      .single()
+      .then(({ data }) => {
+        if (data) setKnotCode(data.code);
+      });
+  }, [user?.knotId]);
+
+  if (!user) return null; // Gate in App.tsx should prevent reaching here without a knot
+
+  const handleNameBlur = () => {
+    if (nameInput.trim() && nameInput !== user.displayName) {
+      updateName(nameInput.trim());
     }
-    if (!name.trim()) return;
-    setupUser(name.trim(), role, code.toUpperCase());
-    toast({ title: "Welcome to the Knot!", description: `Assigned Role: ${roleLabels[role]}` });
   };
 
-  // Not setup — show onboarding
-  if (!isSetup) {
-    return (
-      <div className="flex justify-center items-center">
+  const copyCode = () => {
+    if (!knotCode) return;
+    navigator.clipboard.writeText(knotCode);
+    setCopied(true);
+    toast({ title: "Código copiado" });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-        <Card className="">
-
-          <CardHeader className="">
-            <CardTitle className="text-lg flex items-center justify-center gap-2">
-              <KeyRound className="h-5 w-5 text-primary" /> JOIN A KNOT
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <form onSubmit={handleSetup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Group Code</Label>
-                <Input id="code" value={code} onChange={(e) => { setCode(e.target.value); setCodeError(false); }} placeholder="Input code"
-                  className={`bg-secondary border-border ${codeError ? "border-critical" : ""}`} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">Operator Name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="bg-secondary border-border" required />
-              </div>
-              <div className="space-y-2">
-                <Label>Operator Role</Label>
-                <Select value={role} onValueChange={(v) => setRole(v as RoleType)}>
-                  <SelectTrigger className="bg-secondary border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allRoles.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {roleLabels[r]} — {roleDescriptions[r]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" variant="safe" className="w-full" size="lg">
-                <LogIn className="h-5 w-5 mr-2" /> Log In
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Already set up — show config
   return (
     <div className="space-y-5">
       <h2 className="text-3xl text-center font-heading tracking-widest">PROFILE</h2>
@@ -97,27 +61,37 @@ export default function Config() {
             <User className="h-4 w-4 text-primary shrink-0" />
             <span className="text-sm flex-1">Operator Name</span>
             <Input
-              value={user!.displayName}
-              onChange={(e) => updateName(e.target.value)}
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onBlur={handleNameBlur}
               className="w-36 h-8 text-xs bg-secondary border-border text-right"
             />
           </div>
           <div className="flex items-center gap-3 px-2 py-2">
             <Shield className="h-4 w-4 text-primary shrink-0" />
             <span className="text-sm flex-1">Knot Role</span>
-            <Select value={user!.role} onValueChange={(v) => updateRole(v as RoleType)}>
-              <SelectTrigger className="w-40 h-8 text-xs bg-secondary border-border">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allRoles.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {roleLabels[r]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <span className="text-xs font-semibold text-primary">{roleLabels[user.role]}</span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Knot Code */}
+      <Card className="tactical-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs text-muted-foreground">Knot Code</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3 px-2 py-2">
+            <span className="text-lg font-mono font-bold tracking-widest flex-1">
+              {knotCode ?? "···"}
+            </span>
+            <Button variant="outline" size="sm" onClick={copyCode} disabled={!knotCode}>
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground px-2">
+            Share this code so others can join your Knot.
+          </p>
         </CardContent>
       </Card>
 
@@ -178,10 +152,9 @@ export default function Config() {
         </CardContent>
       </Card>
 
-      <Button variant="outline" className="w-full border-critical/50 text-critical" onClick={logout}>
-        <LogOut className="h-4 w-4 mr-2" /> LEAVE KNOT
+      <Button variant="outline" className="w-full border-critical/50 text-critical" onClick={signOut}>
+        <LogOut className="h-4 w-4 mr-2" /> SIGN OUT
       </Button>
-
     </div>
   );
 }

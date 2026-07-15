@@ -10,73 +10,258 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
-      profiles: {
+      knots: {
         Row: {
-          avatar_initials: string
-          created_at: string
+          code: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      map_markers: {
+        Row: {
+          category: Database["public"]["Enums"]["marker_category"]
+          created_at: string | null
+          created_by: string | null
+          id: string
+          knot_id: string
+          latitude: number
+          longitude: number
+          name: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["marker_category"]
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          knot_id: string
+          latitude: number
+          longitude: number
+          name: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["marker_category"]
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          knot_id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_markers_knot_id_fkey"
+            columns: ["knot_id"]
+            isOneToOne: false
+            referencedRelation: "knots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          avatar_initials: string | null
+          created_at: string | null
           display_name: string
           id: string
+          knot_id: string
           last_check_in: string | null
           latitude: number | null
           location_updated_at: string | null
           longitude: number | null
-          pod_id: string | null
-          role: Database["public"]["Enums"]["pod_role"]
-          status: string | null
-          updated_at: string
+          role: Database["public"]["Enums"]["role_type"]
+          status: Database["public"]["Enums"]["status_type"] | null
           user_id: string
         }
         Insert: {
-          avatar_initials?: string
-          created_at?: string
+          avatar_initials?: string | null
+          created_at?: string | null
           display_name: string
           id?: string
+          knot_id: string
           last_check_in?: string | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
-          pod_id?: string | null
-          role?: Database["public"]["Enums"]["pod_role"]
-          status?: string | null
-          updated_at?: string
+          role: Database["public"]["Enums"]["role_type"]
+          status?: Database["public"]["Enums"]["status_type"] | null
           user_id: string
         }
         Update: {
-          avatar_initials?: string
-          created_at?: string
+          avatar_initials?: string | null
+          created_at?: string | null
           display_name?: string
           id?: string
+          knot_id?: string
           last_check_in?: string | null
           latitude?: number | null
           location_updated_at?: string | null
           longitude?: number | null
-          pod_id?: string | null
-          role?: Database["public"]["Enums"]["pod_role"]
-          status?: string | null
-          updated_at?: string
+          role?: Database["public"]["Enums"]["role_type"]
+          status?: Database["public"]["Enums"]["status_type"] | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "members_knot_id_fkey"
+            columns: ["knot_id"]
+            isOneToOne: false
+            referencedRelation: "knots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplies: {
+        Row: {
+          acquired: boolean
+          category: Database["public"]["Enums"]["supply_category"]
+          created_at: string | null
+          have: number
+          id: string
+          knot_id: string
+          name: string
+          need: number
+          unit: string
+        }
+        Insert: {
+          acquired?: boolean
+          category: Database["public"]["Enums"]["supply_category"]
+          created_at?: string | null
+          have?: number
+          id?: string
+          knot_id: string
+          name: string
+          need?: number
+          unit: string
+        }
+        Update: {
+          acquired?: boolean
+          category?: Database["public"]["Enums"]["supply_category"]
+          created_at?: string | null
+          have?: number
+          id?: string
+          knot_id?: string
+          name?: string
+          need?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplies_knot_id_fkey"
+            columns: ["knot_id"]
+            isOneToOne: false
+            referencedRelation: "knots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_knot: {
+        Args: { p_display_name: string; p_knot_name?: string }
+        Returns: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "knots"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      generate_knot_code: { Args: never; Returns: string }
+      join_knot: {
+        Args: {
+          p_code: string
+          p_display_name: string
+          p_role: Database["public"]["Enums"]["role_type"]
+        }
+        Returns: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "knots"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      my_knot_id: { Args: never; Returns: string }
     }
     Enums: {
-      pod_role:
+      marker_category: "meeting" | "danger" | "resource" | "shelter"
+      role_type:
         | "vanguard"
         | "medic"
         | "navigator"
         | "comms"
         | "quartermaster"
         | "builder"
+      status_type: "ok" | "help" | "critical"
+      supply_category:
+        | "Water"
+        | "Food"
+        | "Medicine"
+        | "Energy"
+        | "Tools"
+        | "Communications"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -202,15 +387,28 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
-      pod_role: [
+      marker_category: ["meeting", "danger", "resource", "shelter"],
+      role_type: [
         "vanguard",
         "medic",
         "navigator",
         "comms",
         "quartermaster",
         "builder",
+      ],
+      status_type: ["ok", "help", "critical"],
+      supply_category: [
+        "Water",
+        "Food",
+        "Medicine",
+        "Energy",
+        "Tools",
+        "Communications",
       ],
     },
   },

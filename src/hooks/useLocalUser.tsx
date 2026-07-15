@@ -1,6 +1,9 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, ReactNode, useCallback, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import type { RoleType, StatusType } from "@/lib/store";
 
+// Dependents remain local for now (per earlier decision: handle in backend later)
 export interface Dependent {
   id: string;
   name: string;
@@ -12,84 +15,109 @@ export interface Dependent {
 interface LocalUser {
   displayName: string;
   role: RoleType;
-  groupCode: string;
+  knotId: string;
+  status: StatusType;
   dependents: Dependent[];
 }
 
 interface LocalUserContextType {
   user: LocalUser | null;
   isSetup: boolean;
-  setupUser: (name: string, role: RoleType, code: string) => void;
-  updateRole: (role: RoleType) => void;
-  updateName: (name: string) => void;
+  loading: boolean;
+  createKnot: (displayName: string, knotName?: string) => Promise<{ error: Error | null; code?: string }>;
+  joinKnot: (code: string, role: RoleType, displayName: string) => Promise<{ error: Error | null }>;
+  updateStatus: (status: StatusType) => Promise<void>;
+  updateName: (name: string) => Promise<void>;
   addDependent: (dep: Omit<Dependent, "id">) => void;
   removeDependent: (id: string) => void;
-  logout: () => void;
 }
 
-const STORAGE_KEY = "aegis-knot-user";
-const GROUP_CODE = "AEGIS2026";
+const DEPENDENTS_KEY = "aegis-dependents"; // temporary, local-only until backed by Supabase
 
 const LocalUserContext = createContext<LocalUserContextType | undefined>(undefined);
 
 export function LocalUserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<LocalUser | null>(null);
+  const { user: authUser, member, loading: authLoading, refetchMember } = useAuth();
+  const [dependents, setDependents] = useState<Dependent[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
+    try {
+      const stored = localStorage.getItem(DEPENDENTS_KEY);
+      if (stored) setDependents(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const persistDependents = useCallback((deps: Dependent[]) => {
+    setDependents(deps);
+    localStorage.setItem(DEPENDENTS_KEY, JSON.stringify(deps));
+  }, []);
+
+  const user: LocalUser | null = member
+    ? {
+        displayName: member.display_name,
+        role: member.role,
+        knotId: member.knot_id,
+        status: member.status as StatusType,
+        dependents,
       }
-    }
-  }, []);
+    : null;
 
-  const persist = useCallback((u: LocalUser) => {
-    setUser(u);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-  }, []);
+  const createKnot = useCallback(async (displayName: string, knotName?: string) => {
+    const { data, error } = await supabase.rpc("create_knot", {
+      p_display_name: displayName,
+      p_knot_name: knotName,
+    });
+    if (!error) await refetchMember();
+    return { error: error as Error | null, code: data?.code };
+  }, [refetchMember]);
 
-  const setupUser = useCallback((name: string, role: RoleType, code: string) => {
-    persist({ displayName: name, role, groupCode: code, dependents: [] });
-  }, [persist]);
+  const joinKnot = useCallback(async (code: string, role: RoleType, displayName: string) => {
+    const { error } = await supabase.rpc("join_knot", {
+      p_code: code.toUpperCase(),
+      p_role: role,
+      p_display_name: displayName,
+    });
+    if (!error) await refetchMember();
+    return { error: error as Error | null };
+  }, [refetchMember]);
 
-  const updateRole = useCallback((role: RoleType) => {
-    if (user) persist({ ...user, role });
-  }, [user, persist]);
+  const updateStatus = useCallback(async (status: StatusType) => {
+    if (!authUser) return;
+    await supabase
+      .from("members")
+      .update({ status, last_check_in: new Date().toISOString() })
+      .eq("user_id", authUser.id);
+    await refetchMember();
+  }, [authUser, refetchMember]);
 
-  const updateName = useCallback((name: string) => {
-    if (user) persist({ ...user, displayName: name });
-  }, [user, persist]);
+  const updateName = useCallback(async (name: string) => {
+    if (!authUser) return;
+    await supabase
+      .from("members")
+      .update({ display_name: name })
+      .eq("user_id", authUser.id);
+    await refetchMember();
+  }, [authUser, refetchMember]);
 
   const addDependent = useCallback((dep: Omit<Dependent, "id">) => {
-    if (user) {
-      persist({ ...user, dependents: [...user.dependents, { ...dep, id: Date.now().toString() }] });
-    }
-  }, [user, persist]);
+    persistDependents([...dependents, { ...dep, id: Date.now().toString() }]);
+  }, [dependents, persistDependents]);
 
   const removeDependent = useCallback((id: string) => {
-    if (user) {
-      persist({ ...user, dependents: user.dependents.filter(d => d.id !== id) });
-    }
-  }, [user, persist]);
-
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    persistDependents(dependents.filter(d => d.id !== id));
+  }, [dependents, persistDependents]);
 
   return (
     <LocalUserContext.Provider value={{
       user,
       isSetup: !!user,
-      setupUser,
-      updateRole,
+      loading: authLoading,
+      createKnot,
+      joinKnot,
+      updateStatus,
       updateName,
       addDependent,
       removeDependent,
-      logout,
     }}>
       {children}
     </LocalUserContext.Provider>
@@ -101,5 +129,3 @@ export function useLocalUser() {
   if (!ctx) throw new Error("useLocalUser must be used within LocalUserProvider");
   return ctx;
 }
-
-export { GROUP_CODE };
