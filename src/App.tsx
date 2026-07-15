@@ -25,7 +25,7 @@ function Gate({ children }: { children: React.ReactNode }) {
   if (authLoading || userLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-primary font-heading text-xl">AEGIS KNOT</div>
+        <div className="animate-pulse font-heading text-xl">AEGIS KNOT</div>
       </div>
     );
   }

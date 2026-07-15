@@ -40,7 +40,7 @@ export default function Auth() {
       if (error) {
         toast({ title: "Error registering", description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Account Created", description: "Check your email to continue" });
+        toast({ title: "Account Created", description: "Now you can join or create a Knot!" });
       }
     }
 
