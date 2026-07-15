@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { Shield, ShieldAlert, AlertTriangle, CheckCircle2, Radio, MapPin, Package, X, User } from "lucide-react";
+import { ShieldAlert, AlertTriangle, CheckCircle2, Radio, MapPin, Package, X, User } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { useAppState, mockPodMembers, roleLabels, type StatusType } from "@/lib/store";
+import { useAppState, roleLabels } from "@/lib/store";
 import { useLocalUser } from "@/hooks/useLocalUser";
+import { useMembers } from "@/hooks/useMembers";
+import { useSupplies } from "@/hooks/useSupplies";
 import { cn } from "@/lib/utils";
 
-function StatusBadge({ status }: { status: StatusType }) {
+function StatusBadge({ status }: { status: "ok" | "help" | "critical" | null }) {
   if (!status) return <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground" />;
   const styles = {
     ok: "bg-safe animate-pulse-glow",
@@ -33,29 +35,24 @@ function loadWaypoints(): { alfa: Waypoint; beta: Waypoint } {
     if (stored) return JSON.parse(stored);
   } catch {}
   return {
-    alfa: { name: "Punto Alfa", lat: "", lng: "" },
-    beta: { name: "Punto Beta", lat: "", lng: "" },
+    alfa: { name: "Point Alfa", lat: "", lng: "" },
+    beta: { name: "Point Beta", lat: "", lng: "" },
   };
 }
 
 export default function Dashboard() {
   const { userStatus, updateStatus, activity } = useAppState();
   const { user } = useLocalUser();
+  const { roster } = useMembers();
+  const { supplies } = useSupplies();
   const navigate = useNavigate();
   const [editingPoint, setEditingPoint] = useState<"alfa" | "beta" | null>(null);
   const [waypoints, setWaypoints] = useState(loadWaypoints);
 
-  // Calculate real supply percentage from localStorage
   const supplyPercent = (() => {
-    try {
-      const stored = localStorage.getItem("aegis-supplies");
-      if (stored) {
-        const items = JSON.parse(stored) as { have: number; need: number }[];
-        const totalNeed = items.reduce((a, s) => a + s.need, 0);
-        if (totalNeed > 0) return Math.round(items.reduce((a, s) => a + s.have, 0) / totalNeed * 100);
-      }
-    } catch {}
-    return 0;
+    const totalNeed = supplies.reduce((a, s) => a + s.need, 0);
+    if (totalNeed === 0) return 0;
+    return Math.round(supplies.reduce((a, s) => a + s.have, 0) / totalNeed * 100);
   })();
 
   useEffect(() => {
@@ -71,23 +68,10 @@ export default function Dashboard() {
 
   const hasCoords = (wp: Waypoint) => wp.lat !== "" && wp.lng !== "";
 
-  // Build pod list: replace the member matching user's role with the signed-in user
-  const podList = mockPodMembers.map((member) => {
-    if (user && member.role === user.role) {
-      return {
-        ...member,
-        name: user.displayName,
-        avatar: user.displayName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2),
-      };
-    }
-    return member;
-  });
-
   return (
     <div className="space-y-5">
       {/* Status Buttons */}
       <section className="space-y-3">
-
         <div className="grid grid-cols-3 gap-3">
           <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-primary", userStatus === "ok" && "ring-2 ring-safe ")} onClick={() => updateStatus("ok")}>
             <CheckCircle2 className="h-6 w-6" />
@@ -102,7 +86,6 @@ export default function Dashboard() {
             <span className="text-xs">CRITICAL</span>
           </Button>
         </div>
-
       </section>
 
       {/* Waypoints */}
@@ -123,28 +106,22 @@ export default function Dashboard() {
                         <X className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     </div>
-                    <Input placeholder="Latitude" value={wp.lat}  onChange={e => updateWaypoint(key, "lat", e.target.value)} className="h-7 text-xs bg-secondary"/>
-                    <Input placeholder="Longitude" value={wp.lng} onChange={e => updateWaypoint(key, "lng", e.target.value)} className="h-7 text-xs bg-secondary"/>
+                    <Input placeholder="Latitude" value={wp.lat} onChange={e => updateWaypoint(key, "lat", e.target.value)} className="h-7 text-xs bg-secondary" />
+                    <Input placeholder="Longitude" value={wp.lng} onChange={e => updateWaypoint(key, "lng", e.target.value)} className="h-7 text-xs bg-secondary" />
                     <Button size="sm" className="w-full h-7 font-bold text-black" onClick={() => setEditingPoint(null)}>Save</Button>
                   </div>
                 ) : (
                   <div className="flex gap-1 flex-col items-center">
-                    
                     <MapPin className="h-5 w-5 text-primary mb-1" />
-
                     <span className="text-xs text-muted-foreground">Point</span>
-
                     <span className="text-sm font-heading font-bold text-foreground">{label}</span>
-
                     {hasCoords(wp) ? (
-
                       <span className="text-xs text-primary font-mono text-center">
                         {parseFloat(wp.lat).toFixed(4)}, {parseFloat(wp.lng).toFixed(4)}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">Tap to define</span>
                     )}
-
                   </div>
                 )}
               </CardContent>
@@ -173,38 +150,38 @@ export default function Dashboard() {
       </div>
 
       {/* Knot Members */}
-      
       <Card className="">
         <NavLink to="/grupo">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-center gap-2">
-            <User className="h-7 w-7 text-primary" /> KNOT MEMBERS
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {podList.map((member) => {
-            const isSelf = user?.role === member.role;
-            return (
-              <div key={member.id} className={cn("flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5", isSelf && "border border-primary/20")}>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
-                  {member.avatar}
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <User className="h-7 w-7 text-primary" /> KNOT MEMBERS
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {roster.map((entry) => {
+              const isSelf = user?.role === entry.role;
+              return (
+                <div key={entry.role} className={cn("flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5", isSelf && "border border-primary/20", !entry.filled && "opacity-60")}>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+                    {entry.avatarInitials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-heading font-semibold truncate">
+                      {entry.filled ? (isSelf ? user!.displayName : entry.displayName) : "Role not filled"}
+                      {isSelf && <span className="text-primary text-xs ml-1">(YOU)</span>}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{roleLabels[entry.role]}</p>
+                  </div>
+                  <StatusBadge status={entry.status} />
+                  <span className="text-xs text-muted-foreground">
+                    {entry.lastCheckIn ? new Date(entry.lastCheckIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                  </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-heading font-semibold truncate">
-                    {member.name}
-                    {isSelf && <span className="text-primary text-xs ml-1">(YOU)</span>}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{roleLabels[member.role]}</p>
-                </div>
-                <StatusBadge status={member.status} />
-                <span className="text-xs text-muted-foreground">{member.lastCheckIn}</span>
-              </div>
-            );
-          })}
-        </CardContent>
+              );
+            })}
+          </CardContent>
         </NavLink>
       </Card>
-      
 
       {/* Activity Feed */}
       <Card className="tactical-border">

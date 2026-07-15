@@ -7,7 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Shield, Heart, Compass, Radio, Package, HardHat, Plus, Trash2, ListChecks, ClipboardList } from "lucide-react";
 import { roleLabels, roleDescriptions, type RoleType, type StatusType } from "@/lib/store";
 import { roleDefaultContent, type RoleContentItem } from "@/lib/roleContent";
-import { loadSupplies, roleCategoryMap, type SupplyItem } from "@/lib/supplies";
+import { useSupplies } from "@/hooks/useSupplies";
+import { roleCategoryMap } from "@/lib/supplies";
 import { cn } from "@/lib/utils";
 
 const roleIcons: Record<RoleType, React.ElementType> = {
@@ -50,7 +51,7 @@ interface Props {
 export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar, status, lastCheckIn, onClose }: Props) {
   const [items, setItems] = useState<RoleContentItem[]>([]);
   const [newItem, setNewItem] = useState("");
-  const [supplies, setSupplies] = useState<SupplyItem[]>([]);
+  const {supplies} = useSupplies()
 
   const isTaskRole = role ? taskRoles.includes(role) : false;
 
@@ -58,9 +59,7 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
     if (!role) return;
     if (taskRoles.includes(role)) {
       setItems(loadItems(role));
-    } else {
-      setSupplies(loadSupplies());
-    }
+    } 
   }, [role]);
 
   if (!role) return null;
@@ -144,19 +143,19 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
               ))}
 
               {items.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Sin elementos registrados</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No registered elements</p>
               )}
             </>
           ) : (
             <>
               {relevantCategories.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Este rol no gestiona categorías de insumos
+                  This role doesn't manage supplies.
                 </p>
               )}
               {relevantCategories.length > 0 && filteredSupplies.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No hay insumos registrados en esta categoría
+                  No registered supplies on this category.
                 </p>
               )}
               {filteredSupplies.map((item) => {
@@ -184,7 +183,7 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
-              placeholder={isList ? "Agregar punto de agenda..." : "Agregar tarea..."}
+              placeholder={isList ? "Add entry to list..." : "Add task..."}
               className="bg-secondary border-border text-sm"
             />
             <Button variant="safe" size="sm" onClick={addItem}>
@@ -195,7 +194,7 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
 
         {isCurrentUser && !isTaskRole && (
           <p className="text-xs text-muted-foreground text-center pt-3">
-            Gestiona estos insumos desde la pestaña Insumos
+            Manage these supplies from the supplies tab.
           </p>
         )}
       </SheetContent>

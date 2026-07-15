@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Shield, Heart, Compass, Radio, Package, HardHat, Users, UserPlus, Bell, Trash2, ChevronRight } from "lucide-react";
+import { Shield, Heart, Compass, Radio, Package, HardHat, Users, UserPlus, Bell, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { mockPodMembers, roleLabels, roleDescriptions, type RoleType, type StatusType } from "@/lib/store";
-import { loadSupplies, roleCategoryMap, categoryColors, type SupplyItem } from "@/lib/supplies";
+import { roleLabels, roleDescriptions, type RoleType } from "@/lib/store";
+import { useMembers } from "@/hooks/useMembers";
+import { useSupplies } from "@/hooks/useSupplies";
+import { roleCategoryMap } from "@/lib/supplies";
 import { useLocalUser } from "@/hooks/useLocalUser";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -26,16 +27,16 @@ const roleIcons: Record<RoleType, React.ElementType> = {
 export default function Grupo() {
   const { user, addDependent, removeDependent } = useLocalUser();
   const { toast } = useToast();
-  const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
+  const { roster } = useMembers();
   const [sheetRole, setSheetRole] = useState<RoleType | null>(null);
-  const [supplies] = useState<SupplyItem[]>(loadSupplies);
-  const selectedMember = selectedRole ? mockPodMembers.find((m) => m.role === selectedRole) : null;
+  const { supplies } = useSupplies();
 
-  const relevantCategories = selectedRole ? roleCategoryMap[selectedRole] : [];
-  const filteredSupplies = selectedRole ? supplies.filter((s) => relevantCategories.includes(s.category)): [];
+  const relevantCategories = sheetRole ? roleCategoryMap[sheetRole] : [];
+  const filteredSupplies = sheetRole ? supplies.filter((s) => relevantCategories.includes(s.category)) : [];
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [depName, setDepName] = useState("");
-  const [depRelation, setDepRelation] = useState("Familiar");
+  const [depRelation, setDepRelation] = useState("Family member");
   const [depLocation, setDepLocation] = useState("");
 
   const dependents = user?.dependents ?? [];
@@ -46,15 +47,17 @@ export default function Grupo() {
     addDependent({
       name: depName.trim(),
       relation: depRelation,
-      location: depLocation.trim() || "Sin ubicación",
+      location: depLocation.trim() || "No location set",
       status: null,
     });
-    toast({ title: "Nodo vinculado", description: `${depName.trim()} agregado como ${depRelation}` });
+    toast({ title: "Node linked", description: `${depName.trim()} added as ${depRelation}` });
     setDepName("");
-    setDepRelation("Familiar");
+    setDepRelation("Family member");
     setDepLocation("");
     setDialogOpen(false);
   };
+
+  const sheetEntry = roster.find(r => r.role === sheetRole);
 
   return (
     <div className="space-y-5">
@@ -62,31 +65,43 @@ export default function Grupo() {
 
       {/* Role Cards */}
       <div className="space-y-2">
-        {mockPodMembers.map((member) => {
-          const Icon = roleIcons[member.role];
-          const isSelected = selectedRole === member.role;
-          const isCurrentUser = user?.role === member.role;
+        {roster.map((entry) => {
+          const Icon = roleIcons[entry.role];
+          const isCurrentUser = user?.role === entry.role;
           return (
-            <Card key={member.id} className={cn("tactical-border  transition-all", isSelected && "border-primary/50", isCurrentUser && "border-primary/30")}
-              onClick={(e) => { e.stopPropagation(); setSheetRole(member.role); }} >
+            <Card
+              key={entry.role}
+              className={cn(
+                "tactical-border transition-all",
+                isCurrentUser && "border-primary/30",
+                !entry.filled && "opacity-60"
+              )}
+              onClick={() => setSheetRole(entry.role)}
+            >
               <CardContent className="flex items-center gap-3 py-3">
-
                 <div className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-primary/50">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
-                
+
                 <div className="flex-1">
                   <p className="font-semibold">
-                    {roleLabels[member.role]}{isCurrentUser && <span className="text-primary text-xs ml-2">(You)</span>}
+                    {roleLabels[entry.role]}
+                    {isCurrentUser && <span className="text-primary text-xs ml-2">(You)</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {isCurrentUser ? user!.displayName : member.name} — {roleDescriptions[member.role]}
+                    {entry.filled
+                      ? `${isCurrentUser ? user!.displayName : entry.displayName} — ${roleDescriptions[entry.role]}`
+                      : "Role not filled"}
                   </p>
                 </div>
 
-                <span className={cn("rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center", member.status === "ok" ? "bg-safe/60" : member.status === "help" ? "bg-warning" : 
-                  member.status === "critical" ? "bg-critical" : "bg-muted-foreground")} >
-                  {member.status === "ok" ? "Ok" : member.status === "help" ? "Help" : member.status === "critical" ? "Critical" : "Offline"}
+                <span className={cn(
+                  "rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center",
+                  entry.status === "ok" ? "bg-safe/60" :
+                  entry.status === "help" ? "bg-warning" :
+                  entry.status === "critical" ? "bg-critical" : "bg-muted-foreground"
+                )}>
+                  {entry.status === "ok" ? "Ok" : entry.status === "help" ? "Help" : entry.status === "critical" ? "Critical" : "Offline"}
                 </span>
               </CardContent>
             </Card>
@@ -124,7 +139,7 @@ export default function Grupo() {
               <button
                 onClick={() => {
                   removeDependent(dep.id);
-                  toast({ title: "Nodo eliminado", description: `${dep.name} fue desvinculado` });
+                  toast({ title: "Node removed", description: `${dep.name} was unlinked` });
                 }}
                 className="text-muted-foreground transition-all p-1"
               >
@@ -163,17 +178,17 @@ export default function Grupo() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Hijo/a">Son/Daughter</SelectItem>
-                        <SelectItem value="Pareja">Partner</SelectItem>
-                        <SelectItem value="Padre/Madre">Parent</SelectItem>
-                        <SelectItem value="Familiar">Member</SelectItem>
-                        <SelectItem value="Otro">Other</SelectItem>
+                        <SelectItem value="Son/Daughter">Son/Daughter</SelectItem>
+                        <SelectItem value="Partner">Partner</SelectItem>
+                        <SelectItem value="Parent">Parent</SelectItem>
+                        <SelectItem value="Family member">Family member</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Usual Location</Label>
-                    <Input value={depLocation} onChange={(e) => setDepLocation(e.target.value)} placeholder="Home, Work, School..." className="bg-secondary border-border"/>
+                    <Input value={depLocation} onChange={(e) => setDepLocation(e.target.value)} placeholder="Home, Work, School..." className="bg-secondary border-border" />
                   </div>
                   <Button type="submit" variant="safe" className="w-full text-white font-semibold">
                     <UserPlus className="h-4 w-4 mr-2" /> Link
@@ -193,10 +208,10 @@ export default function Grupo() {
       <RoleDetailSheet
         role={sheetRole}
         isCurrentUser={user?.role === sheetRole}
-        userName={user?.role === sheetRole ? user.displayName : mockPodMembers.find(m => m.role === sheetRole)?.name || ""}
-        avatar={mockPodMembers.find(m => m.role === sheetRole)?.avatar}
-        status={mockPodMembers.find(m => m.role === sheetRole)?.status}
-        lastCheckIn={mockPodMembers.find(m => m.role === sheetRole)?.lastCheckIn}
+        userName={sheetEntry ? (user?.role === sheetRole ? user!.displayName : sheetEntry.displayName) : ""}
+        avatar={sheetEntry?.avatarInitials}
+        status={sheetEntry?.status}
+        lastCheckIn={sheetEntry?.lastCheckIn ?? undefined}
         onClose={() => setSheetRole(null)}
       />
     </div>

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Shield, Users, KeyRound, Plus } from "lucide-react";
+import { Shield, Users, KeyRound, Plus, LogOut } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocalUser } from "@/hooks/useLocalUser";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { roleLabels, roleDescriptions, type RoleType } from "@/lib/store";
 
@@ -14,6 +15,7 @@ const roles: RoleType[] = ["medic", "navigator", "comms", "quartermaster", "buil
 
 export default function KnotSetup() {
   const { isSetup, createKnot, joinKnot } = useLocalUser();
+  const { session, signOut } = useAuth();
   const { toast } = useToast();
   const [mode, setMode] = useState<"choose" | "create" | "join">("choose");
   const [submitting, setSubmitting] = useState(false);
@@ -26,6 +28,9 @@ export default function KnotSetup() {
   const [joinName, setJoinName] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [joinRole, setJoinRole] = useState<RoleType>("medic");
+
+  // No session at all → back to login
+  if (!session) return <Navigate to="/auth" replace />;
 
   // Once a members row exists (knot created or joined), leave this page
   if (isSetup) return <Navigate to="/" replace />;
@@ -74,6 +79,9 @@ export default function KnotSetup() {
             </Button>
             <Button onClick={() => setMode("join")} variant="outline" className="w-full" size="lg">
               <KeyRound className="h-5 w-5 mr-2" /> JOIN WITH CODE
+            </Button>
+            <Button onClick={signOut} variant="ghost" className="w-full text-muted-foreground" size="sm">
+              <LogOut className="h-4 w-4 mr-2" /> Sign out
             </Button>
           </CardContent>
         </Card>

@@ -1,70 +1,61 @@
 import { useState } from "react";
-import { Package, Plus, Minus, ShoppingCart, Check, Trash2, Pencil } from "lucide-react";
+import { Package, Plus, Minus, Check, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {type SupplyItem,loadSupplies, saveSupplies, categoryColors,} from "@/lib/supplies";
+import { useSupplies, type Supply, type SupplyCategory } from "@/hooks/useSupplies";
+import { categoryColors } from "@/lib/supplies";
+
+const allCategories: SupplyCategory[] = ["Water", "Food", "Medicine", "Energy", "Tools", "Communications"];
 
 export default function Insumos() {
-  const [supplies, setSupplies] = useState<SupplyItem[]>(loadSupplies);
+  const { supplies, loading, addSupply, updateSupply, removeSupply } = useSupplies();
   const [filter, setFilter] = useState<string>("all");
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNeedValue, setEditNeedValue] = useState("");
   const [newName, setNewName] = useState("");
-  const [newCategory, setNewCategory] = useState("Water");
-  const [newNeed, setNewNeed] = useState("");
-  const [newUnit, setNewUnit] = useState("");
+  const [newCategory, setNewCategory] = useState<SupplyCategory>("Tools");
+  const [newNeed, setNewNeed] = useState("1");
+  const [newUnit, setNewUnit] = useState("uds");
 
-  const update = (items: SupplyItem[]) => {
-    setSupplies(items);
-    saveSupplies(items);
+  const increment = (item: Supply) => {
+    updateSupply(item.id, { have: Math.min(item.have + 1, item.need) });
   };
 
-  const increment = (id: string) => {
-    update(supplies.map(s => s.id === id ? { ...s, have: Math.min(s.have + 1, s.need) } : s));
+  const decrement = (item: Supply) => {
+    updateSupply(item.id, { have: Math.max(item.have - 1, 0) });
   };
 
-  const decrement = (id: string) => {
-    update(supplies.map(s => s.id === id ? { ...s, have: Math.max(s.have - 1, 0) } : s));
+  const toggleAcquired = (item: Supply) => {
+    const nowAcquired = !item.acquired;
+    updateSupply(item.id, { acquired: nowAcquired, have: nowAcquired ? item.need : item.have });
   };
 
-  const toggleAcquired = (id: string) => {
-    update(supplies.map(s => s.id === id ? { ...s, acquired: !s.acquired, have: !s.acquired ? s.need : s.have } : s));
-  };
-
-  const removeItem = (id: string) => {
-    update(supplies.filter(s => s.id !== id));
-  };
-
-  const startEditNeed = (item: SupplyItem) => {
+  const startEditNeed = (item: Supply) => {
     setEditingId(item.id);
     setEditNeedValue(item.need.toString());
   };
 
-  const saveEditNeed = (id: string) => {
+  const saveEditNeed = (item: Supply) => {
     const val = parseInt(editNeedValue);
     if (val > 0) {
-      update(supplies.map(s => s.id === id ? { ...s, need: val, have: Math.min(s.have, val) } : s));
+      updateSupply(item.id, { need: val, have: Math.min(item.have, val) });
     }
     setEditingId(null);
   };
 
-  const addItem = () => {
+  const handleAddItem = async () => {
     if (!newName.trim()) return;
-    const item: SupplyItem = {
-      id: Date.now().toString(),
+    await addSupply({
       name: newName.trim(),
       category: newCategory,
-      have: 0,
       need: parseInt(newNeed) || 1,
       unit: newUnit,
-      acquired: false,
-    };
-    update([...supplies, item]);
+    });
     setNewName("");
     setNewNeed("1");
     setShowAdd(false);
@@ -78,6 +69,10 @@ export default function Insumos() {
   const overallPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
   const pendingCount = totalItems - completedItems;
 
+  if (loading) {
+    return <p className="text-center text-muted-foreground py-8">Loading supplies...</p>;
+  }
+
   return (
     <div className="space-y-5">
       {/* Header Stats */}
@@ -86,28 +81,25 @@ export default function Insumos() {
         <Card className="">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-
               <div className="flex items-center gap-2">
                 <Package className="h-7 w-7 text-primary" />
                 <span className="font-heading font-bold text-lg">{overallPercent}% COMPLETE</span>
               </div>
-
-              <Badge variant="outline" className="border-primary/50">{pendingCount} left</Badge>
-
+              <Badge variant="outline" className="border-primary/50">{pendingCount} pending</Badge>
             </div>
             <Progress value={overallPercent} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{completedItems} of {totalItems} complete</span>
-              <span>{supplies.filter(s => s.have < s.need).reduce((acc, s) => acc + (s.need - s.have), 0)} left to pick</span>
+              <span>{completedItems} of {totalItems} items covered</span>
+              <span>{supplies.filter(s => s.have < s.need).reduce((acc, s) => acc + (s.need - s.have), 0)} units needed</span>
             </div>
           </CardContent>
         </Card>
       </section>
 
       {/* Category Filter */}
-      <div className="grid grid-cols-2 gap-2 overflow-x-auto pb-1 ">
+      <div className="grid grid-cols-2 gap-2 overflow-x-auto pb-1">
         {categories.map(cat => (
-          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary" : "bg-secondary")}>
+          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary/70" : "bg-secondary")}>
             {cat === "all" ? "All" : cat}
           </button>
         ))}
@@ -115,6 +107,9 @@ export default function Insumos() {
 
       {/* Supply List */}
       <div className="space-y-2">
+        {filtered.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-6">No supplies yet, add your first one below.</p>
+        )}
         {filtered.map(item => {
           const percent = item.need > 0 ? Math.round((item.have / item.need) * 100) : 0;
           const missing = item.need - item.have;
@@ -124,13 +119,11 @@ export default function Insumos() {
             <Card key={item.id} className="transition-all">
               <CardContent className="py-3 px-4">
                 <div className="flex items-center gap-3">
-                  {/* Check button */}
-                  <button onClick={() => toggleAcquired(item.id)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                  <button onClick={() => toggleAcquired(item)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
                       item.acquired ? "bg-primary border-primary" : isComplete ? "border-primary" : "border-muted-foreground/30")}>
                     {item.acquired && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
                   </button>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className={cn("text-sm font-heading font-semibold truncate", item.acquired && "text-muted-foreground")}>
@@ -152,18 +145,15 @@ export default function Insumos() {
                             type="number"
                             value={editNeedValue}
                             onChange={e => setEditNeedValue(e.target.value)}
-                            onBlur={() => saveEditNeed(item.id)}
-                            onKeyDown={e => e.key === "Enter" && saveEditNeed(item.id)}
+                            onBlur={() => saveEditNeed(item)}
+                            onKeyDown={e => e.key === "Enter" && saveEditNeed(item)}
                             className="w-10 h-5 text-xs font-mono bg-secondary border border-border rounded px-1 text-foreground"
                             autoFocus
                           />
                           <span className="text-xs font-mono">{item.unit}</span>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => startEditNeed(item)}
-                          className="flex items-center gap-1 shrink-0 transition-all"
-                        >
+                        <button onClick={() => startEditNeed(item)} className="flex items-center gap-1 shrink-0 hover:text-primary transition-colors">
                           <span className={cn(
                             "text-xs font-mono",
                             isComplete ? "text-primary" : missing > 0 ? "text-warning" : "text-muted-foreground"
@@ -176,28 +166,19 @@ export default function Insumos() {
                     </div>
                     {missing > 0 && !item.acquired && (
                       <span className="text-[10px] text-warning">
-                        {missing} {item.unit}
+                        {missing} {item.unit} missing
                       </span>
                     )}
                   </div>
 
-                  {/* Controls */}
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => decrement(item.id)}
-                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center transition-all"
-                    >
+                    <button onClick={() => decrement(item)} className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-accent transition-colors">
                       <Minus className="h-3.5 w-3.5" />
                     </button>
-                    <button
-                      onClick={() => increment(item.id)}
-                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center transition-all"
-                    >
+                    <button onClick={() => increment(item)} className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-accent transition-colors">
                       <Plus className="h-3.5 w-3.5" />
                     </button>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="h-7 w-7 rounded bg-secondary flex items-center justify-center text-muted-foreground transition-all"
-                    >
+                    <button onClick={() => removeSupply(item.id)} className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -212,41 +193,25 @@ export default function Insumos() {
       {showAdd ? (
         <Card className="tactical-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-md text-center">Add Supply</CardTitle>
+            <CardTitle className="text-sm">ADD SUPPLY</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Input
-              placeholder="Supply Name"
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              className="bg-secondary"
-            />
+            <Input placeholder="Supply name" value={newName} onChange={e => setNewName(e.target.value)} className="bg-secondary" />
             <div className="grid grid-cols-3 gap-2">
               <select
                 value={newCategory}
-                onChange={e => setNewCategory(e.target.value)}
+                onChange={e => setNewCategory(e.target.value as SupplyCategory)}
                 className="rounded-md bg-secondary border border-border px-2 py-2 text-sm text-foreground"
               >
-                {["Water", "Food", "Medicine", "Energy", "Tools", "Communications"].map(c => (
+                {allCategories.map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
-              <Input
-                placeholder="Amount"
-                type="number"
-                value={newNeed}
-                onChange={e => setNewNeed(e.target.value)}
-                className="bg-secondary"
-              />
-              <Input
-                placeholder="Unit"
-                value={newUnit}
-                onChange={e => setNewUnit(e.target.value)}
-                className="bg-secondary"
-              />
+              <Input placeholder="Qty" type="number" value={newNeed} onChange={e => setNewNeed(e.target.value)} className="bg-secondary" />
+              <Input placeholder="Unit" value={newUnit} onChange={e => setNewUnit(e.target.value)} className="bg-secondary" />
             </div>
             <div className="flex gap-2">
-              <Button onClick={addItem} size="sm" className="flex-1 text-white">
+              <Button onClick={handleAddItem} size="sm" className="flex-1">
                 <Plus className="h-4 w-4 mr-1" /> Add
               </Button>
               <Button onClick={() => setShowAdd(false)} size="sm" variant="outline" className="flex-1">
@@ -256,8 +221,8 @@ export default function Insumos() {
           </CardContent>
         </Card>
       ) : (
-        <Button onClick={() => setShowAdd(true)} variant="outline" className="w-full">
-          <Plus className="h-4 w-4 mr-2" /> Add Supply
+        <Button onClick={() => setShowAdd(true)} variant="outline" className="w-full tactical-border">
+          <Plus className="h-4 w-4 mr-2" /> Add supply
         </Button>
       )}
     </div>
