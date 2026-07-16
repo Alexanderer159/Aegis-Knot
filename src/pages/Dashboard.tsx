@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { useAppState, roleLabels } from "@/lib/store";
+import { useAppState, roleLabels } from "@/lib/store"; // activity feed only now
 import { useLocalUser } from "@/hooks/useLocalUser";
 import { useMembers } from "@/hooks/useMembers";
 import { useSupplies } from "@/hooks/useSupplies";
 import { cn } from "@/lib/utils";
+import type { StatusType } from "@/lib/store";
 
-function StatusBadge({ status }: { status: "ok" | "help" | "critical" | null }) {
+function StatusBadge({ status }: { status: StatusType | null }) {
   if (!status) return <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground" />;
   const styles = {
     ok: "bg-safe animate-pulse-glow",
@@ -41,13 +42,14 @@ function loadWaypoints(): { alfa: Waypoint; beta: Waypoint } {
 }
 
 export default function Dashboard() {
-  const { userStatus, updateStatus, activity } = useAppState();
-  const { user } = useLocalUser();
+  const { activity } = useAppState(); // activity feed still mock for now
+  const { user, updateStatus } = useLocalUser();
   const { roster } = useMembers();
   const { supplies } = useSupplies();
   const navigate = useNavigate();
   const [editingPoint, setEditingPoint] = useState<"alfa" | "beta" | null>(null);
   const [waypoints, setWaypoints] = useState(loadWaypoints);
+  const [updating, setUpdating] = useState(false);
 
   const supplyPercent = (() => {
     const totalNeed = supplies.reduce((a, s) => a + s.need, 0);
@@ -68,26 +70,35 @@ export default function Dashboard() {
 
   const hasCoords = (wp: Waypoint) => wp.lat !== "" && wp.lng !== "";
 
+  // Current user's real status comes from their own member row, not local mock state
+  const myEntry = roster.find(r => user && r.role === user.role);
+  const myStatus = myEntry?.status ?? null;
+
+  const handleStatusClick = async (status: StatusType) => {
+    setUpdating(true);
+    await updateStatus(status);
+    setUpdating(false);
+  };
+
   return (
     <div className="space-y-5">
       {/* Status Buttons */}
       <section className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
-          <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-primary", userStatus === "ok" && "ring-2 ring-safe ")} onClick={() => updateStatus("ok")}>
+          <Button size="xl" disabled={updating} className={cn("flex-col gap-1 bg-secondary text-primary", myStatus === "ok" && "ring-2 ring-safe")} onClick={() => handleStatusClick("ok")}>
             <CheckCircle2 className="h-6 w-6" />
             <span className="text-xs">I´M OK</span>
           </Button>
-          <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-warning", userStatus === "help" && "ring-2 ring-warning")} onClick={() => updateStatus("help")}>
+          <Button size="xl" disabled={updating} className={cn("flex-col gap-1 bg-secondary text-warning", myStatus === "help" && "ring-2 ring-warning")} onClick={() => handleStatusClick("help")}>
             <AlertTriangle className="h-6 w-6" />
             <span className="text-xs">HELP</span>
           </Button>
-          <Button size="xl" className={cn("flex-col gap-1 bg-secondary text-critical", userStatus === "critical" && "ring-2 ring-critical")} onClick={() => updateStatus("critical")}>
+          <Button size="xl" disabled={updating} className={cn("flex-col gap-1 bg-secondary text-critical", myStatus === "critical" && "ring-2 ring-critical")} onClick={() => handleStatusClick("critical")}>
             <ShieldAlert className="h-6 w-6" />
             <span className="text-xs">CRITICAL</span>
           </Button>
         </div>
       </section>
-
       {/* Waypoints */}
       <div className="grid grid-cols-2 gap-3">
         {(["alfa", "beta"] as const).map(key => {
