@@ -11,6 +11,7 @@ import { useMembers } from "@/hooks/useMembers";
 import { supabase } from "@/integrations/supabase/client";
 import { roleLabels, type RoleType } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
+import InstallButton from "@/components/ui/installButton"
 
 const allRoles: RoleType[] = ["medic", "navigator", "comms", "quartermaster", "builder"];
 
@@ -239,6 +240,8 @@ export default function Config() {
           </DialogContent>
         </Dialog>
       )}
+
+      
 
       <Button variant="outline" className="w-full border-critical/50 text-critical" onClick={signOut}>
         <LogOut className="h-4 w-4 mr-2" /> SIGN OUT
