@@ -16,6 +16,8 @@ export interface RosterEntry {
   avatarInitials: string;
   status: StatusType | null;
   lastCheckIn: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 function initialsFrom(name: string) {
@@ -64,28 +66,32 @@ export function useMembers() {
   }, [user?.knotId, fetchMembers]);
 
   // Always return all 6 roles, filling gaps with placeholders
-  const roster: RosterEntry[] = allRoles.map((role) => {
-    const match = members.find((m) => m.role === role);
-    if (match) {
-      return {
-        role,
-        filled: true,
-        id: match.id,
-        displayName: match.display_name,
-        avatarInitials: match.avatar_initials || initialsFrom(match.display_name),
-        status: match.status,
-        lastCheckIn: match.last_check_in,
-      };
-    }
+const roster: RosterEntry[] = allRoles.map((role) => {
+  const match = members.find((m) => m.role === role);
+  if (match) {
     return {
       role,
-      filled: false,
-      displayName: "Role not filled",
-      avatarInitials: "—",
-      status: null,
-      lastCheckIn: null,
+      filled: true,
+      id: match.id,
+      displayName: match.display_name,
+      avatarInitials: match.avatar_initials || initialsFrom(match.display_name),
+      status: match.status,
+      lastCheckIn: match.last_check_in,
+      latitude: match.latitude,
+      longitude: match.longitude,
     };
-  });
+  }
+  return {
+    role,
+    filled: false,
+    displayName: "Role not filled",
+    avatarInitials: "—",
+    status: null,
+    lastCheckIn: null,
+    latitude: null,
+    longitude: null,
+  };
+});
 
   return { members, roster, loading, refetch: fetchMembers };
 }

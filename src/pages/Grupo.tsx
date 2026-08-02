@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Shield, Heart, Compass, Radio, Package, HardHat, Users, UserPlus, Bell, Trash2 } from "lucide-react";
+import { Shield, Heart, Compass, Radio, Package, HardHat, Users, UserPlus, Bell, Trash2, CheckCircle2, AlertTriangle, ShieldAlert, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { roleLabels, roleDescriptions, type RoleType } from "@/lib/store";
+import { roleLabels, roleDescriptions, type RoleType, type StatusType } from "@/lib/store";
 import { useMembers } from "@/hooks/useMembers";
 import { useSupplies } from "@/hooks/useSupplies";
 import { roleCategoryMap } from "@/lib/supplies";
@@ -25,11 +25,12 @@ const roleIcons: Record<RoleType, React.ElementType> = {
 };
 
 export default function Grupo() {
-  const { user, addDependent, removeDependent } = useLocalUser();
+  const { user, addDependent, removeDependent, shareLocation } = useLocalUser();
   const { toast } = useToast();
   const { roster } = useMembers();
   const [sheetRole, setSheetRole] = useState<RoleType | null>(null);
   const { supplies } = useSupplies();
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const relevantCategories = sheetRole ? roleCategoryMap[sheetRole] : [];
   const filteredSupplies = sheetRole ? supplies.filter((s) => relevantCategories.includes(s.category)) : [];
@@ -57,11 +58,51 @@ export default function Grupo() {
     setDialogOpen(false);
   };
 
+  const handleStatusClick = (status: StatusType) => {
+    if (!navigator.geolocation) {
+      toast({ title: "Geolocation not available", description: "Your browser doesn't support location sharing.", variant: "destructive" });
+      return;
+    }
+    setUpdatingStatus(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { error } = await shareLocation(pos.coords.latitude, pos.coords.longitude, status);
+        setUpdatingStatus(false);
+        if (error) {
+          toast({ title: "Couldn't update status", description: error.message, variant: "destructive" });
+        }
+      },
+      async (err) => {
+        // Location denied/unavailable: still update status, just without a location
+        const { error } = await shareLocation(0, 0, status).catch(() => ({ error: err }));
+        setUpdatingStatus(false);
+        toast({ title: "Status updated without location", description: "Location access was denied or unavailable." });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const sheetEntry = roster.find(r => r.role === sheetRole);
 
   return (
     <div className="space-y-5">
       <h2 className="text-3xl text-center">YOUR KNOT</h2>
+
+      {/* Status Buttons */}
+      <div className="grid grid-cols-3 gap-3">
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary text-primary", user?.status === "ok" && "ring-2 ring-safe")} onClick={() => handleStatusClick("ok")}>
+          <CheckCircle2 className="h-6 w-6" />
+          <span className="text-xs">I´M OK</span>
+        </Button>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary text-warning", user?.status === "help" && "ring-2 ring-warning")} onClick={() => handleStatusClick("help")}>
+          <AlertTriangle className="h-6 w-6" />
+          <span className="text-xs">HELP</span>
+        </Button>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary text-critical", user?.status === "critical" && "ring-2 ring-critical")} onClick={() => handleStatusClick("critical")}>
+          <ShieldAlert className="h-6 w-6" />
+          <span className="text-xs">CRITICAL</span>
+        </Button>
+      </div>
 
       {/* Role Cards */}
       <div className="space-y-2">
@@ -71,19 +112,14 @@ export default function Grupo() {
           return (
             <Card
               key={entry.role}
-              className={cn(
-                "tactical-border transition-all",
-                isCurrentUser && "border-primary/30",
-                !entry.filled && "opacity-60"
-              )}
+              className={cn("tactical-border transition-all", !entry.filled && "opacity-60")}
               onClick={() => setSheetRole(entry.role)}
             >
               <CardContent className="flex items-center gap-3 py-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-primary/50">
-                  <Icon className="h-5 w-5 text-primary" />
+                <div className="flex h-10 w-10 items-center justify-center">
+                  <Icon className="text-primary" />
                 </div>
-
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="font-semibold">
                     {roleLabels[entry.role]}
                     {isCurrentUser && <span className="text-primary text-xs ml-2">(You)</span>}
@@ -94,9 +130,21 @@ export default function Grupo() {
                       : "Role not filled"}
                   </p>
                 </div>
-
+                  {entry.filled && (
+  entry.latitude && entry.longitude && !(entry.latitude === 0 && entry.longitude === 0) ? (
+    <p className="text-sm text-muted-foreground font-mono flex items-center gap-1 mt-0.5">
+      <MapPin className="h-2.5 w-2.5 shrink-0" />
+      {entry.latitude.toFixed(4)}, {entry.longitude.toFixed(4)}
+    </p>
+  ) : (
+    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+      <MapPin className="h-5 w-5 shrink-0" />
+      Location unknown
+    </p>
+  )
+)}
                 <span className={cn(
-                  "rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center",
+                  "rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center shrink-0",
                   entry.status === "ok" ? "bg-safe/60" :
                   entry.status === "help" ? "bg-warning" :
                   entry.status === "critical" ? "bg-critical" : "bg-muted-foreground"
@@ -119,9 +167,7 @@ export default function Grupo() {
         </CardHeader>
         <CardContent className="space-y-3">
           {dependents.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-2">
-              No linked family members
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-2">No linked family members</p>
           )}
           {dependents.map((dep) => (
             <div key={dep.id} className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5">
@@ -132,10 +178,7 @@ export default function Grupo() {
                 <p className="text-sm font-heading font-semibold">{dep.name}</p>
                 <p className="text-xs text-muted-foreground">{dep.relation} — {dep.location}</p>
               </div>
-              <span className={cn(
-                "h-2.5 w-2.5 rounded-full",
-                dep.status === "ok" ? "bg-safe" : "bg-muted-foreground"
-              )} />
+              <span className={cn("h-2.5 w-2.5 rounded-full", dep.status === "ok" ? "bg-safe" : "bg-muted-foreground")} />
               <button
                 onClick={() => {
                   removeDependent(dep.id);
@@ -163,13 +206,7 @@ export default function Grupo() {
                 <form onSubmit={handleAddDependent} className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <Label>Name</Label>
-                    <Input
-                      value={depName}
-                      onChange={(e) => setDepName(e.target.value)}
-                      placeholder="Full Name"
-                      className="bg-secondary border-border"
-                      required
-                    />
+                    <Input value={depName} onChange={(e) => setDepName(e.target.value)} placeholder="Full Name" className="bg-secondary border-border" required />
                   </div>
                   <div className="space-y-2">
                     <Label>Relationship</Label>

@@ -30,6 +30,7 @@ interface LocalUserContextType {
   updateName: (name: string) => Promise<void>;
   addDependent: (dep: Omit<Dependent, "id">) => void;
   removeDependent: (id: string) => void;
+  shareLocation: (lat: number, lng: number, status: StatusType) => Promise<{ error: Error | null }>;
 }
 
 const DEPENDENTS_KEY = "aegis-dependents"; // temporary, local-only until backed by Supabase
@@ -90,6 +91,22 @@ export function LocalUserProvider({ children }: { children: ReactNode }) {
     await refetchMember();
   }, [authUser, refetchMember]);
 
+  const shareLocation = useCallback(async (lat: number, lng: number, status: StatusType) => {
+  if (!authUser) return { error: new Error("Not authenticated") };
+  const { error } = await supabase
+    .from("members")
+    .update({
+      latitude: lat,
+      longitude: lng,
+      location_updated_at: new Date().toISOString(),
+      status,
+      last_check_in: new Date().toISOString(),
+    })
+    .eq("user_id", authUser.id);
+  if (!error) await refetchMember();
+  return { error: error as Error | null };
+}, [authUser, refetchMember]);
+
   const updateName = useCallback(async (name: string) => {
     if (!authUser) return;
     await supabase
@@ -108,17 +125,18 @@ export function LocalUserProvider({ children }: { children: ReactNode }) {
   }, [dependents, persistDependents]);
 
   return (
-    <LocalUserContext.Provider value={{
-      user,
-      isSetup: !!user,
-      loading: authLoading,
-      createKnot,
-      joinKnot,
-      updateStatus,
-      updateName,
-      addDependent,
-      removeDependent,
-    }}>
+<LocalUserContext.Provider value={{
+  user,
+  isSetup: !!user,
+  loading: authLoading,
+  createKnot,
+  joinKnot,
+  updateStatus,
+  updateName,
+  shareLocation,
+  addDependent,
+  removeDependent,
+}}>
       {children}
     </LocalUserContext.Provider>
   );

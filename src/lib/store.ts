@@ -57,11 +57,11 @@ export const mockMarkers: MapMarker[] = [
 
 export const roleLabels: Record<RoleType, string> = {
   vanguard: "Vanguard",
-  medic: "The Medic",
-  navigator: "The Navigator",
-  comms: "The Comms",
+  medic: "Medic",
+  navigator: "Navigator",
+  comms: "Comms",
   quartermaster: "Quartermaster",
-  builder: "The Builder",
+  builder: "Builder",
 };
 
 export const roleDescriptions: Record<RoleType, string> = {

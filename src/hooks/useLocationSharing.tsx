@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useLocalUser } from "./useLocalUser";
 import { Tables } from "@/integrations/supabase/types";
 
-type Profile = Tables<"profiles">;
+type Member = Tables<"members">;
 
 export function useLocationSharing(enabled = true) {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ export function useLocationSharing(enabled = true) {
 
     const updateLocation = (pos: GeolocationPosition) => {
       supabase
-        .from("profiles")
+        .from("members")
         .update({
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
@@ -37,44 +38,43 @@ export function useLocationSharing(enabled = true) {
 }
 
 export function usePodLocations() {
-  const [members, setMembers] = useState<Profile[]>([]);
+  const { user } = useLocalUser();
+  const [members, setMembers] = useState<Member[]>([]);
 
-  useEffect(() => {
-    // Initial fetch
+  const fetchLocations = useCallback(() => {
+    if (!user?.knotId) {
+      setMembers([]);
+      return;
+    }
     supabase
-      .from("profiles")
+      .from("members")
       .select("*")
+      .eq("knot_id", user.knotId)
       .not("latitude", "is", null)
       .then(({ data }) => {
         if (data) setMembers(data);
       });
+  }, [user?.knotId]);
 
-    // Real-time subscription
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
+
+  useEffect(() => {
+    if (!user?.knotId) return;
     const channel = supabase
-      .channel("pod-locations")
+      .channel(`pod-locations-${user.knotId}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles" },
-        (payload) => {
-          const updated = payload.new as Profile;
-          setMembers((prev) => {
-            const idx = prev.findIndex((m) => m.id === updated.id);
-            if (idx >= 0) {
-              const next = [...prev];
-              next[idx] = updated;
-              return next;
-            }
-            if (updated.latitude) return [...prev, updated];
-            return prev;
-          });
-        }
+        { event: "*", schema: "public", table: "members", filter: `knot_id=eq.${user.knotId}` },
+        () => fetchLocations()
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user?.knotId, fetchLocations]);
 
   return members;
 }

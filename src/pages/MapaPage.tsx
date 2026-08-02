@@ -1,26 +1,40 @@
-import { MapPin, AlertTriangle, Droplets, Home, Navigation, Share2, Users } from "lucide-react";
+import { useState } from "react";
+import { MapPin, AlertTriangle, Droplets, Home, Navigation, Share2, Users, Plus, Trash2, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { mockMarkers } from "@/lib/store";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMapMarkers, type MarkerCategory } from "@/hooks/useMapMarkers";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { usePodLocations } from "@/hooks/useLocationSharing";
+import { useLocalUser } from "@/hooks/useLocalUser";
+import { useToast } from "@/hooks/use-toast";
 import AegisMap from "@/components/AegisMap";
+import type { StatusType } from "@/lib/store";
 
-
-const markerIcons: Record<string, React.ElementType> = {
+const markerIcons: Record<MarkerCategory, React.ElementType> = {
   meeting: MapPin,
   danger: AlertTriangle,
   resource: Droplets,
   shelter: Home,
 };
 
-const markerColors: Record<string, string> = {
+const markerColors: Record<MarkerCategory, string> = {
   meeting: "text-primary",
   danger: "text-critical",
-  resource: "text-blue-500",
+  resource: "text-blue-400",
   shelter: "text-warning",
 };
+
+const markerLabels: Record<MarkerCategory, string> = {
+  meeting: "Meeting Point",
+  danger: "Danger Zone",
+  resource: "Resource",
+  shelter: "Shelter",
+};
+
+const allCategories: MarkerCategory[] = ["meeting", "danger", "resource", "shelter"];
 
 const statusColors: Record<string, string> = {
   ok: "bg-safe",
@@ -30,13 +44,84 @@ const statusColors: Record<string, string> = {
 
 export default function MapaPage() {
   const podMembers = usePodLocations();
-  
+  const { markers, addMarker, removeMarker } = useMapMarkers();
+  const { user, shareLocation } = useLocalUser();
+  const { toast } = useToast();
+
+  const [showAdd, setShowAdd] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newCategory, setNewCategory] = useState<MarkerCategory>("meeting");
+  const [newLat, setNewLat] = useState("");
+  const [newLng, setNewLng] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareStatus, setShareStatus] = useState<StatusType>("ok");
+  const [locating, setLocating] = useState(false);
+
+  const handleAdd = async () => {
+    const lat = parseFloat(newLat);
+    const lng = parseFloat(newLng);
+    if (!newName.trim() || isNaN(lat) || isNaN(lng)) {
+      toast({ title: "Missing info", description: "Name, latitude and longitude are required.", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await addMarker({ name: newName.trim(), category: newCategory, latitude: lat, longitude: lng });
+    setSubmitting(false);
+    if (error) {
+      toast({ title: "Couldn't add point", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Point added", description: newName.trim() });
+    setNewName("");
+    setNewLat("");
+    setNewLng("");
+    setShowAdd(false);
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    const { error } = await removeMarker(id);
+    if (error) {
+      toast({ title: "Couldn't delete point", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Point deleted", description: name });
+    }
+  };
+
+  const openShareDialog = () => {
+    setShareStatus(user?.status ?? "ok");
+    setShareOpen(true);
+  };
+
+  const confirmShare = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Geolocation not available", description: "Your browser doesn't support location sharing.", variant: "destructive" });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { error } = await shareLocation(pos.coords.latitude, pos.coords.longitude, shareStatus);
+        setLocating(false);
+        if (error) {
+          toast({ title: "Couldn't share location", description: error.message, variant: "destructive" });
+          return;
+        }
+        toast({ title: "Location shared", description: `Status: ${shareStatus.toUpperCase()}` });
+        setShareOpen(false);
+      },
+      (err) => {
+        setLocating(false);
+        toast({ title: "Location access denied", description: err.message, variant: "destructive" });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-4">
       <h2 className="text-3xl text-center">MAP</h2>
-
-
 
       {/* Live Pod Members */}
       {podMembers.length > 0 && (
@@ -44,7 +129,7 @@ export default function MapaPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              ONLINE MEMBERS ({podMembers.length})
+              MEMBERS ONLINE ({podMembers.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -56,16 +141,19 @@ export default function MapaPage() {
                 <div className="flex-1">
                   <p className="text-sm font-heading font-semibold">{member.display_name}</p>
                   <p className="text-xs text-muted-foreground font-mono">
-                    {member.latitude?.toFixed(4)}, {member.longitude?.toFixed(4)}
-                    {member.location_updated_at && (
-                      <> · {new Date(member.location_updated_at).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}</>
-                    )}
-                  </p>
+    {member.latitude && member.longitude && !(member.latitude === 0 && member.longitude === 0) ? (
+      <>
+        {member.latitude.toFixed(4)}, {member.longitude.toFixed(4)}
+        {member.location_updated_at && (
+          <> · {new Date(member.location_updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
+        )}
+      </>
+    ) : (
+      "Location unknown"
+    )}
+  </p>
                 </div>
-                <span className={cn(
-                  "h-2.5 w-2.5 rounded-full",
-                  statusColors[member.status || ""] || "bg-muted-foreground"
-                )} />
+                <span className={cn("h-2.5 w-2.5 rounded-full", statusColors[member.status || ""] || "bg-muted-foreground")} />
               </div>
             ))}
           </CardContent>
@@ -73,50 +161,121 @@ export default function MapaPage() {
       )}
 
       {/* Map Preview */}
-      <AegisMap heightClass="h-48 z-0" />
-
-      {/* Map Controls */}
-      <Card className="tactical-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Offline Map</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Download city maps</span>
-            <Switch />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Points of interest</span>
-            <Switch defaultChecked />
-          </div>
-        </CardContent>
-      </Card>
+      <AegisMap heightClass="h-60" />
 
       {/* Points of Interest */}
       <Card className="tactical-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Points Of Interest</CardTitle>
+          <CardTitle className="text-base">POINTS OF INTEREST</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {mockMarkers.map((marker) => (
-            <div key={marker.id} className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5">
-              <MapPin className="h-5 w-5 text-primary" />
-              <div className="flex-1">
-                <p className="text-sm font-heading font-semibold">{marker.name}</p>
-                <p className="text-xs text-muted-foreground font-mono">
-                  {marker.lat}, {marker.lng}
-                </p>
+          {markers.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-2">No points set yet</p>
+          )}
+          {markers.map((marker) => {
+            const Icon = markerIcons[marker.category];
+            return (
+              <div key={marker.id} className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5">
+                <Icon className={cn("h-4 w-4", markerColors[marker.category])} />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-heading font-semibold">{marker.name}</p>
+                    <span className="text-[10px] text-muted-foreground">{markerLabels[marker.category]}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {marker.latitude.toFixed(3)}, {marker.longitude.toFixed(3)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(marker.id, marker.name)}
+                  className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
-              <Navigation className="h-5 w-5 text-primary/50" />
+            );
+          })}
+
+          {showAdd ? (
+            <div className="space-y-3 pt-2 border-t border-border/50 mt-3">
+              <Input placeholder="Point name" value={newName} onChange={e => setNewName(e.target.value)} className="bg-secondary" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <select
+                  value={newCategory}
+                  onChange={e => setNewCategory(e.target.value as MarkerCategory)}
+                  className="rounded-md bg-secondary border border-border px-2 py-2 text-sm text-foreground col-span-3 sm:col-span-1"
+                >
+                  {allCategories.map(c => (
+                    <option key={c} value={c}>{markerLabels[c]}</option>
+                  ))}
+                </select>
+                <Input placeholder="Latitude" value={newLat} onChange={e => setNewLat(e.target.value)} className="bg-secondary" />
+                <Input placeholder="Longitude" value={newLng} onChange={e => setNewLng(e.target.value)} className="bg-secondary" />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleAdd} size="sm" className="flex-1" disabled={submitting}>
+                  <Plus className="h-4 w-4 mr-1" /> {submitting ? "Adding..." : "Add"}
+                </Button>
+                <Button onClick={() => setShowAdd(false)} size="sm" variant="outline" className="flex-1">
+                  Cancel
+                </Button>
+              </div>
             </div>
-          ))}
+          ) : (
+            <Button onClick={() => setShowAdd(true)} variant="outline" className="w-full tactical-border mt-2">
+              <Plus className="h-4 w-4 mr-2" /> Add point
+            </Button>
+          )}
         </CardContent>
       </Card>
 
-      <Button variant="safe" className="w-full text-white font-bold" size="lg" >
+      <Button onClick={openShareDialog} variant="safe" className="w-full text-white font-bold" size="lg">
         <Share2 className="h-5 w-5 mr-2" />
-        Share Location
+        SHARE LOCATION
       </Button>
+
+      {/* Share Location Dialog */}
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Confirm Your Status</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Your location will be shared with your Knot. Confirm your current status.
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setShareStatus("ok")}
+                className={cn("flex flex-col items-center gap-1 rounded-lg py-3 border-2 transition-colors",
+                  shareStatus === "ok" ? "border-safe bg-safe/10" : "border-border bg-secondary")}
+              >
+                <CheckCircle2 className={cn("h-5 w-5", shareStatus === "ok" ? "text-safe" : "text-muted-foreground")} />
+                <span className="text-xs font-semibold">OK</span>
+              </button>
+              <button
+                onClick={() => setShareStatus("help")}
+                className={cn("flex flex-col items-center gap-1 rounded-lg py-3 border-2 transition-colors",
+                  shareStatus === "help" ? "border-warning bg-warning/10" : "border-border bg-secondary")}
+              >
+                <AlertTriangle className={cn("h-5 w-5", shareStatus === "help" ? "text-warning" : "text-muted-foreground")} />
+                <span className="text-xs font-semibold">HELP</span>
+              </button>
+              <button
+                onClick={() => setShareStatus("critical")}
+                className={cn("flex flex-col items-center gap-1 rounded-lg py-3 border-2 transition-colors",
+                  shareStatus === "critical" ? "border-critical bg-critical/10" : "border-border bg-secondary")}
+              >
+                <ShieldAlert className={cn("h-5 w-5", shareStatus === "critical" ? "text-critical" : "text-muted-foreground")} />
+                <span className="text-xs font-semibold">CRITICAL</span>
+              </button>
+            </div>
+            <Button onClick={confirmShare} variant="safe" className="w-full text-white font-semibold" disabled={locating}>
+              {locating ? "Getting location..." : "Confirm & Share"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

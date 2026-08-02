@@ -7,14 +7,14 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { LocalUserProvider, useLocalUser } from "@/hooks/useLocalUser";
 import Auth from "@/pages/Auth";
-import Dashboard from "@/pages/Dashboard";
+import KnotSetup from "@/pages/KnotSetup";
 import Grupo from "@/pages/Grupo";
 import MapaPage from "@/pages/MapaPage";
 import Insumos from "@/pages/Insumos";
+import Activity from "@/pages/Activity";
 import Vault from "@/pages/Vault";
 import Config from "@/pages/Config";
 import NotFound from "@/pages/NotFound";
-import KnotSetup from "@/pages/KnotSetup";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +25,7 @@ function Gate({ children }: { children: React.ReactNode }) {
   if (authLoading || userLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse font-heading text-xl">AEGIS KNOT</div>
+        <div className="animate-pulse text-primary font-heading text-xl">AEGIS KNOT</div>
       </div>
     );
   }
@@ -47,10 +47,10 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/setup" element={<KnotSetup />} />
               <Route element={<Gate><AppLayout /></Gate>}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/grupo" element={<Grupo />} />
+                <Route path="/" element={<Grupo />} />
                 <Route path="/mapa" element={<MapaPage />} />
                 <Route path="/insumos" element={<Insumos />} />
+                <Route path="/activity" element={<Activity />} />
                 <Route path="/vault" element={<Vault />} />
                 <Route path="/config" element={<Config />} />
               </Route>
