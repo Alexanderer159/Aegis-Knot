@@ -110,47 +110,50 @@ export default function Grupo() {
           const Icon = roleIcons[entry.role];
           const isCurrentUser = user?.role === entry.role;
           return (
-            <Card
-              key={entry.role}
-              className={cn("tactical-border transition-all", !entry.filled && "opacity-60")}
-              onClick={() => setSheetRole(entry.role)}
-            >
-              <CardContent className="flex items-center gap-3 py-3">
+            <Card key={entry.role} className={cn("transition-all", !entry.filled && "")} onClick={() => setSheetRole(entry.role)}>
+
+              <CardContent className="flex items-center justify-between gap-3 ">
+
                 <div className="flex h-10 w-10 items-center justify-center">
                   <Icon className="text-primary" />
                 </div>
+
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold">
                     {roleLabels[entry.role]}
                     {isCurrentUser && <span className="text-primary text-xs ml-2">(You)</span>}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {entry.filled
-                      ? `${isCurrentUser ? user!.displayName : entry.displayName} — ${roleDescriptions[entry.role]}`
-                      : "Role not filled"}
+                    {entry.filled ? `${entry.displayName}` : "Role not filled"}
                   </p>
+                  <p className="text-xs text-muted-foreground">{roleDescriptions[entry.role]}</p>
                 </div>
-                  {entry.filled && (
-  entry.latitude && entry.longitude && !(entry.latitude === 0 && entry.longitude === 0) ? (
-    <p className="text-sm text-muted-foreground font-mono flex items-center gap-1 mt-0.5">
-      <MapPin className="h-2.5 w-2.5 shrink-0" />
-      {entry.latitude.toFixed(4)}, {entry.longitude.toFixed(4)}
-    </p>
-  ) : (
-    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
-      <MapPin className="h-5 w-5 shrink-0" />
-      Location unknown
-    </p>
-  )
-)}
-                <span className={cn(
-                  "rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center shrink-0",
-                  entry.status === "ok" ? "bg-safe/60" :
-                  entry.status === "help" ? "bg-warning" :
-                  entry.status === "critical" ? "bg-critical" : "bg-muted-foreground"
-                )}>
-                  {entry.status === "ok" ? "Ok" : entry.status === "help" ? "Help" : entry.status === "critical" ? "Critical" : "Offline"}
-                </span>
+
+                <div className="flex flex-col justify-center items-center gap-2">
+
+                  <span className={cn("rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center shrink-0",
+                    entry.status === "ok" ? "bg-safe/75" : entry.status === "help" ? "bg-warning" : entry.status === "critical" ? "bg-critical" : "bg-muted-foreground")}>
+                    {entry.status === "ok" ? "Ok" : entry.status === "help" ? "Help" : entry.status === "critical" ? "Critical" : "Offline"}
+                  </span>
+
+                  {!entry.filled ? (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      No Location
+                    </p>
+                  ) : entry.latitude && entry.longitude && !(entry.latitude === 0 && entry.longitude === 0) ? (
+                    <p className="text-sm text-muted-foreground font-mono flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                      {entry.latitude.toFixed(4)}, {entry.longitude.toFixed(4)}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      Location unknown
+                    </p>
+                  )}
+                </div>
+
               </CardContent>
             </Card>
           );

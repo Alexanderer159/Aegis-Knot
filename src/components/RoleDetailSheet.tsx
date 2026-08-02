@@ -106,7 +106,12 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
           <div className="flex-1 min-w-0">
             <p className="font-heading font-bold truncate text-xl">{userName}</p>
             {lastCheckIn && (
-              <p className="text-xs text-muted-foreground">Last check-in: {lastCheckIn}</p>
+              <p className="text-xs text-muted-foreground">Last check-in: {new Date(lastCheckIn).toLocaleString([], {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}</p>
             )}
           </div>
           <Button variant={status === "ok" ? "safe" : status === "help" ? "warning" : status === "critical" ? "critical" : "outline"} size="sm" className="shrink-0">

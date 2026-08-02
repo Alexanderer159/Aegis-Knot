@@ -128,7 +128,7 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
     <>
       {/* Compact Preview */}
       <div onClick={() => setFullscreen(true)} className={cn("relative w-full rounded-lg overflow-hidden tactical-border cursor-pointer group", heightClass)}>
-        <div className="pointer-events-none absolute inset-0 z-[400]">
+        <div className="pointer-events-none absolute inset-0 z-0">
           <MapContainer center={getCenter()} zoom={13} scrollWheelZoom={false} dragging={false} doubleClickZoom={false} zoomControl={false} touchZoom={false} attributionControl={false} className="w-full h-full">
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
             {markers.map((marker) => (

@@ -141,17 +141,17 @@ export default function MapaPage() {
                 <div className="flex-1">
                   <p className="text-sm font-heading font-semibold">{member.display_name}</p>
                   <p className="text-xs text-muted-foreground font-mono">
-    {member.latitude && member.longitude && !(member.latitude === 0 && member.longitude === 0) ? (
-      <>
-        {member.latitude.toFixed(4)}, {member.longitude.toFixed(4)}
-        {member.location_updated_at && (
-          <> · {new Date(member.location_updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
-        )}
-      </>
-    ) : (
-      "Location unknown"
-    )}
-  </p>
+                    {member.latitude && member.longitude && !(member.latitude === 0 && member.longitude === 0) ? (
+                      <>
+                        {member.latitude.toFixed(4)}, {member.longitude.toFixed(4)}
+                        {member.location_updated_at && (
+                          <> · {new Date(member.location_updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
+                        )}
+                      </>
+                    ) : (
+                      "Location unknown"
+                    )}
+                  </p>
                 </div>
                 <span className={cn("h-2.5 w-2.5 rounded-full", statusColors[member.status || ""] || "bg-muted-foreground")} />
               </div>

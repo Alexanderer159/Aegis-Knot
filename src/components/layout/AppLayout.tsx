@@ -4,7 +4,7 @@ import {Navbar} from "./Navbar"
 
 export function AppLayout() {
   return (
-    <div className="min-h-screen tactical-grid">
+    <div className="min-h-screen ">
       <Navbar />
 
       <main className="pb-20 px-4 py-4">
