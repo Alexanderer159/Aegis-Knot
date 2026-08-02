@@ -6,9 +6,22 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+}
+
+function isSafari() {
+  const ua = navigator.userAgent;
+  return /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+}
+
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
+}
+
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
+  const [installed, setInstalled] = useState(isStandalone());
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -34,5 +47,14 @@ export function useInstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  return { canInstall: !!deferredPrompt, installed, promptInstall };
+  // Safari (iOS or macOS) never fires beforeinstallprompt, needs manual instructions instead
+  const needsManualInstall = !installed && !deferredPrompt && isSafari();
+
+  return {
+    canInstall: !!deferredPrompt,
+    installed,
+    needsManualInstall,
+    isIOS: isIOS(),
+    promptInstall,
+  };
 }

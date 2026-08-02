@@ -11,7 +11,7 @@ import { useMembers } from "@/hooks/useMembers";
 import { supabase } from "@/integrations/supabase/client";
 import { roleLabels, type RoleType } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
-import InstallButton from "@/components/ui/installButton"
+import { InstallAppCard } from "@/components/ui/InstallAppCard";
 
 const allRoles: RoleType[] = ["medic", "navigator", "comms", "quartermaster", "builder"];
 
@@ -106,6 +106,8 @@ export default function Config() {
   return (
     <div className="space-y-5">
       <h2 className="text-3xl text-center font-heading tracking-widest">PROFILE</h2>
+
+      <InstallAppCard />
 
       {/* Profile */}
       <Card className="tactical-border">
