@@ -47,9 +47,21 @@ function memberIcon(status: string | null | undefined) {
   const color = status === "ok" ? "#22c55e" : status === "help" ? "#eab308" : status === "critical" ? "#ef4444" : "#9ca3af";
   return L.divIcon({
     className: "",
-    html: `<div style="width: 20px; height: 20px; border-radius: 9999px; background: ${color}; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.6);"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    html: `
+      <div style="
+        width: 28px; height: 28px; border-radius: 9999px;
+        background: ${color}; border: 2px solid white;
+        box-shadow: 0 0 6px rgba(0,0,0,0.6);
+        display: flex; align-items: center; justify-content: center;
+      ">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 }
 

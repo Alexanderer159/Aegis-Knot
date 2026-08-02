@@ -31,6 +31,9 @@ interface LocalUserContextType {
   addDependent: (dep: Omit<Dependent, "id">) => void;
   removeDependent: (id: string) => void;
   shareLocation: (lat: number, lng: number, status: StatusType) => Promise<{ error: Error | null }>;
+  changeRole: (newRole: RoleType) => Promise<{ error: Error | null }>;
+  leaveKnot: () => Promise<{ error: Error | null }>;
+  deleteKnot: () => Promise<{ error: Error | null }>;
 }
 
 const DEPENDENTS_KEY = "aegis-dependents"; // temporary, local-only until backed by Supabase
@@ -71,6 +74,65 @@ export function LocalUserProvider({ children }: { children: ReactNode }) {
     if (!error) await refetchMember();
     return { error: error as Error | null, code: data?.code };
   }, [refetchMember]);
+
+  const changeRole = useCallback(async (newRole: RoleType) => {
+  if (!authUser || !user) return { error: new Error("Not authenticated") };
+  if (user.role === "vanguard") {
+    return { error: new Error("Vanguard can't switch roles. Transfer leadership or delete the Knot instead.") };
+  }
+  if (newRole === "vanguard") {
+    return { error: new Error("Vanguard can only be assigned automatically when a Knot is created.") };
+  }
+  const { data: existing } = await supabase
+    .from("members")
+    .select("id")
+    .eq("knot_id", user.knotId)
+    .eq("role", newRole)
+    .neq("user_id", authUser.id)
+    .maybeSingle();
+
+  if (existing) {
+    return { error: new Error("That role is already taken in your Knot.") };
+  }
+
+  const { error } = await supabase
+    .from("members")
+    .update({ role: newRole })
+    .eq("user_id", authUser.id);
+
+  if (!error) await refetchMember();
+  return { error: error as Error | null };
+}, [authUser, user, refetchMember]);
+
+const leaveKnot = useCallback(async () => {
+  if (!authUser || !user) return { error: new Error("Not authenticated") };
+  if (user.role === "vanguard") {
+    return { error: new Error("As Vanguard, you can't leave. Delete the Knot instead.") };
+  }
+
+  const { error } = await supabase
+    .from("members")
+    .delete()
+    .eq("user_id", authUser.id);
+
+  if (!error) await refetchMember(); // member becomes null, isSetup flips false, Gate redirects to /setup
+  return { error: error as Error | null };
+}, [authUser, user, refetchMember]);
+
+const deleteKnot = useCallback(async () => {
+  if (!user) return { error: new Error("No knot to delete") };
+  if (user.role !== "vanguard") {
+    return { error: new Error("Only the Vanguard can delete the Knot.") };
+  }
+
+  const { error } = await supabase
+    .from("knots")
+    .delete()
+    .eq("id", user.knotId);
+
+  if (!error) await refetchMember(); // your own member row is gone too (cascade), isSetup flips false
+  return { error: error as Error | null };
+}, [user, refetchMember]);
 
   const joinKnot = useCallback(async (code: string, role: RoleType, displayName: string) => {
     const { error } = await supabase.rpc("join_knot", {
@@ -134,6 +196,9 @@ export function LocalUserProvider({ children }: { children: ReactNode }) {
   updateStatus,
   updateName,
   shareLocation,
+  changeRole,
+  leaveKnot,
+  deleteKnot,
   addDependent,
   removeDependent,
 }}>

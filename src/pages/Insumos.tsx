@@ -5,11 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { useSupplies, type Supply, type SupplyCategory } from "@/hooks/useSupplies";
 import { categoryColors } from "@/lib/supplies";
 
 const allCategories: SupplyCategory[] = ["Water", "Food", "Medicine", "Energy", "Tools", "Communications"];
+
+function sliderColor(percent: number) {
+  if (percent >= 100) return "bg-primary";
+  if (percent >= 50) return "bg-warning";
+  return "bg-critical";
+}
 
 export default function Insumos() {
   const { supplies, loading, addSupply, updateSupply, removeSupply } = useSupplies();
@@ -17,17 +24,24 @@ export default function Insumos() {
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNeedValue, setEditNeedValue] = useState("");
+  const [editHaveId, setEditHaveId] = useState<string | null>(null);
+  const [editHaveValue, setEditHaveValue] = useState("");
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState<SupplyCategory>("Tools");
   const [newNeed, setNewNeed] = useState("1");
   const [newUnit, setNewUnit] = useState("uds");
 
+  const setHave = (item: Supply, value: number) => {
+    const clamped = Math.max(0, Math.min(value, item.need));
+    updateSupply(item.id, { have: clamped });
+  };
+
   const increment = (item: Supply) => {
-    updateSupply(item.id, { have: Math.min(item.have + 1, item.need) });
+    setHave(item, item.have + 1);
   };
 
   const decrement = (item: Supply) => {
-    updateSupply(item.id, { have: Math.max(item.have - 1, 0) });
+    setHave(item, item.have - 1);
   };
 
   const toggleAcquired = (item: Supply) => {
@@ -46,6 +60,19 @@ export default function Insumos() {
       updateSupply(item.id, { need: val, have: Math.min(item.have, val) });
     }
     setEditingId(null);
+  };
+
+  const startEditHave = (item: Supply) => {
+    setEditHaveId(item.id);
+    setEditHaveValue(item.have.toString());
+  };
+
+  const saveEditHave = (item: Supply) => {
+    const val = parseInt(editHaveValue);
+    if (!isNaN(val)) {
+      setHave(item, val);
+    }
+    setEditHaveId(null);
   };
 
   const handleAddItem = async () => {
@@ -117,7 +144,7 @@ export default function Insumos() {
 
           return (
             <Card key={item.id} className="transition-all">
-              <CardContent className="py-3 px-4">
+              <CardContent className="py-3 px-4 space-y-2">
                 <div className="flex items-center gap-3">
                   <button onClick={() => toggleAcquired(item)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
                       item.acquired ? "bg-primary border-primary" : isComplete ? "border-primary" : "border-muted-foreground/30")}>
@@ -125,22 +152,43 @@ export default function Insumos() {
                   </button>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("text-sm font-heading font-semibold truncate", item.acquired && "text-muted-foreground")}>
-                        {item.name}
-                      </span>
-                      <span className={cn(
-                        "text-[10px] px-1.5 py-0.5 rounded-full shrink-0",
-                        categoryColors[item.category] || "bg-secondary text-secondary-foreground"
-                      )}>
-                        {item.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Progress value={percent} className="h-1 flex-1" />
-                      {editingId === item.id ? (
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span className="text-xs font-mono">{item.have}/</span>
+                    <div className="flex items-center justify-between gap-2">
+                      
+                      <div className="flex items-center gap-2">
+                        <span className={cn("text-sm font-heading font-semibold", item.acquired && "text-muted-foreground")}>
+                          {item.name}
+                        </span>
+                        <span className={cn(
+                          "text-[10px] px-1.5 py-0.5 rounded-full shrink-0",
+                          categoryColors[item.category] || "bg-secondary text-secondary-foreground"
+                        )}>
+                          {item.category}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 ">
+                        {editHaveId === item.id ? (
+                          <input
+                            type="number"
+                            value={editHaveValue}
+                            onChange={e => setEditHaveValue(e.target.value)}
+                            onBlur={() => saveEditHave(item)}
+                            onKeyDown={e => e.key === "Enter" && saveEditHave(item)}
+                            className="w-10 h-5 text-xs font-mono bg-secondary border border-border rounded px-1 text-foreground"
+                            autoFocus
+                          />
+                        ) : (
+                          <button onClick={() => startEditHave(item)} className={cn(
+                            "text-xs font-mono hover:text-primary transition-colors",
+                            isComplete ? "text-primary" : missing > 0 ? "text-warning" : "text-muted-foreground"
+                          )}>
+                            {item.have}
+                          </button>
+                        )}
+
+                        <span className="text-xs font-mono text-muted-foreground">/</span>
+
+                        {editingId === item.id ? (
                           <input
                             type="number"
                             value={editNeedValue}
@@ -150,20 +198,27 @@ export default function Insumos() {
                             className="w-10 h-5 text-xs font-mono bg-secondary border border-border rounded px-1 text-foreground"
                             autoFocus
                           />
-                          <span className="text-xs font-mono">{item.unit}</span>
-                        </div>
-                      ) : (
-                        <button onClick={() => startEditNeed(item)} className="flex items-center gap-1 shrink-0 hover:text-primary transition-colors">
-                          <span className={cn(
-                            "text-xs font-mono",
-                            isComplete ? "text-primary" : missing > 0 ? "text-warning" : "text-muted-foreground"
-                          )}>
-                            {item.have}/{item.need} {item.unit}
-                          </span>
-                          <Pencil className="h-2.5 w-2.5 text-muted-foreground" />
-                        </button>
-                      )}
+                        ) : (
+                          <button onClick={() => startEditNeed(item)} className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors">
+                            {item.need}
+                          </button>
+                        )}
+
+                        <span className="text-xs font-mono text-muted-foreground">{item.unit}</span>
+                        <Pencil className="h-2.5 w-2.5 text-muted-foreground ml-0.5" />
+                      </div>
                     </div>
+
+                    {/* Slider replaces the old per-item progress bar, color reflects fill level */}
+                    <Slider
+                      value={[item.have]}
+                      max={item.need}
+                      step={1}
+                      onValueChange={([val]) => setHave(item, val)}
+                      className="py-1 mt-2"
+                      rangeClassName={sliderColor(percent)}
+                    />
+
                     {missing > 0 && !item.acquired && (
                       <span className="text-[10px] text-warning">
                         {missing} {item.unit} missing
