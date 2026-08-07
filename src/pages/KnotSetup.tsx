@@ -15,7 +15,7 @@ const roles: RoleType[] = ["medic", "navigator", "comms", "quartermaster", "buil
 
 export default function KnotSetup() {
   const { isSetup, createKnot, joinKnot } = useLocalUser();
-  const { session, signOut } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const { toast } = useToast();
   const [mode, setMode] = useState<"choose" | "create" | "join">("choose");
   const [submitting, setSubmitting] = useState(false);
@@ -29,8 +29,8 @@ export default function KnotSetup() {
   const [joinCode, setJoinCode] = useState("");
   const [joinRole, setJoinRole] = useState<RoleType>("medic");
 
-  // No session at all → back to login
-  if (!session) return <Navigate to="/auth" replace />;
+  // Not authenticated at all → back to login
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
 
   // Once a members row exists (knot created or joined), leave this page
   if (isSetup) return <Navigate to="/" replace />;

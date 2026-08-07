@@ -19,18 +19,18 @@ import NotFound from "@/pages/NotFound";
 const queryClient = new QueryClient();
 
 function Gate({ children }: { children: React.ReactNode }) {
-  const { session, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const { isSetup, loading: userLoading } = useLocalUser();
 
   if (authLoading || userLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-primary font-heading text-xl">THE_KNOT_</div>
+        <div className="animate-pulse text-primary font-heading text-xl">AEGIS KNOT</div>
       </div>
     );
   }
 
-  if (!session) return <Navigate to="/auth" replace />;
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
   if (!isSetup) return <Navigate to="/setup" replace />;
   return <>{children}</>;
 }
