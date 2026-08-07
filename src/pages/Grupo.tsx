@@ -86,19 +86,18 @@ export default function Grupo() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl text-center">YOUR KNOT</h2>
 
       {/* Status Buttons */}
       <div className="grid grid-cols-3 gap-3">
-        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary text-primary", user?.status === "ok" && "ring-2 ring-safe")} onClick={() => handleStatusClick("ok")}>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-safe", user?.status === "ok" && "ring-2 ring-safe")} onClick={() => handleStatusClick("ok")}>
           <CheckCircle2 className="h-6 w-6" />
           <span className="text-xs">I´M OK</span>
         </Button>
-        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary text-warning", user?.status === "help" && "ring-2 ring-warning")} onClick={() => handleStatusClick("help")}>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-warning", user?.status === "help" && "ring-2 ring-warning")} onClick={() => handleStatusClick("help")}>
           <AlertTriangle className="h-6 w-6" />
           <span className="text-xs">HELP</span>
         </Button>
-        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary text-critical", user?.status === "critical" && "ring-2 ring-critical")} onClick={() => handleStatusClick("critical")}>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-critical", user?.status === "critical" && "ring-2 ring-critical")} onClick={() => handleStatusClick("critical")}>
           <ShieldAlert className="h-6 w-6" />
           <span className="text-xs">CRITICAL</span>
         </Button>
@@ -132,7 +131,7 @@ export default function Grupo() {
                 <div className="flex flex-col justify-center items-center gap-2">
 
                   <span className={cn("rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center shrink-0",
-                    entry.status === "ok" ? "bg-safe/75" : entry.status === "help" ? "bg-warning" : entry.status === "critical" ? "bg-critical" : "bg-muted-foreground")}>
+                    entry.status === "ok" ? "bg-safe/70" : entry.status === "help" ? "bg-warning" : entry.status === "critical" ? "bg-critical" : "bg-muted-foreground")}>
                     {entry.status === "ok" ? "Ok" : entry.status === "help" ? "Help" : entry.status === "critical" ? "Critical" : "Offline"}
                   </span>
 
@@ -195,52 +194,59 @@ export default function Grupo() {
           ))}
 
           <div className="flex gap-2 pt-1">
+
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="flex-1">
-                  <UserPlus className="h-4 w-4 mr-1" />
-                  Link
-                </Button>
+                  <UserPlus className="h-4 w-4 mr-1" />Link</Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-sm">
-                <DialogHeader>
-                  <DialogTitle>Link Member</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddDependent} className="space-y-4 pt-2">
-                  <div className="space-y-2">
-                    <Label>Name</Label>
-                    <Input value={depName} onChange={(e) => setDepName(e.target.value)} placeholder="Full Name" className="bg-secondary border-border" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Relationship</Label>
-                    <Select value={depRelation} onValueChange={setDepRelation}>
-                      <SelectTrigger className="bg-secondary border-border">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Son/Daughter">Son/Daughter</SelectItem>
-                        <SelectItem value="Partner">Partner</SelectItem>
-                        <SelectItem value="Parent">Parent</SelectItem>
-                        <SelectItem value="Family member">Family member</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Usual Location</Label>
-                    <Input value={depLocation} onChange={(e) => setDepLocation(e.target.value)} placeholder="Home, Work, School..." className="bg-secondary border-border" />
-                  </div>
-                  <Button type="submit" variant="safe" className="w-full text-white font-semibold">
-                    <UserPlus className="h-4 w-4 mr-2" /> Link
-                  </Button>
-                </form>
+
+              <DialogContent className="">
+                <div className="bg-card p-5 rounded-md">
+                  <DialogHeader>
+                    <DialogTitle>Link Member</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleAddDependent} className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <Label>Name</Label>
+                      <Input value={depName} onChange={(e) => setDepName(e.target.value)} placeholder="Full Name" className="bg-secondary border-border" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Relationship</Label>
+                      <Select value={depRelation} onValueChange={setDepRelation}>
+                        <SelectTrigger className="bg-secondary border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Son/Daughter">Son/Daughter</SelectItem>
+                          <SelectItem value="Partner">Partner</SelectItem>
+                          <SelectItem value="Parent">Parent</SelectItem>
+                          <SelectItem value="Family member">Family member</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Usual Location</Label>
+                      <Input value={depLocation} onChange={(e) => setDepLocation(e.target.value)} placeholder="Home, Work, School..." className="bg-secondary border-border" />
+                    </div>
+                    <Button type="submit" className="bg-primary/70 w-full text-white font-semibold">
+                      <UserPlus className="h-4 w-4 mr-2" /> Link
+                    </Button>
+                  </form>
+                </div>
+
               </DialogContent>
+
+
             </Dialog>
-            <Button variant="warning" size="sm" className="flex-1 text-white">
+
+            <Button size="sm" className="bg-critical/70 flex-1 text-white">
               <Bell className="h-4 w-4 mr-1" />
               Reunite Family
             </Button>
           </div>
+
         </CardContent>
       </Card>
 

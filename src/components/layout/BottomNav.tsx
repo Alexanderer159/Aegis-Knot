@@ -11,7 +11,7 @@ const navItems = [
 
 export function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card">
+    <nav className="fixed bottom-0 left-0 right-0 z-[99999] bg-card/60 backdrop-blur-xl">
       <div className="flex items-center justify-around py-2">
         {navItems.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.to === "/"} className={({ isActive }) =>

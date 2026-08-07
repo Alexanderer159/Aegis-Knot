@@ -233,7 +233,7 @@ export default function Insumos() {
                     <button onClick={() => increment(item)} className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-accent transition-colors">
                       <Plus className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => removeSupply(item.id)} className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors">
+                    <button onClick={() => removeSupply(item.id)} className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-critical/20 text-muted-foreground hover:text-critical transition-colors">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>

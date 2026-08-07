@@ -1,14 +1,13 @@
-import { Shield, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
   return (
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-3">
+      <header className="z-40 flex items-center justify-between gap-2 px-4 py-3">
         
       <NavLink to="/" className="flex gap-2">
-        <Shield className="h-8 w-8 text-primary" />
-        <h1 className="text-lg font-heading font-bold tracking-widest text-foreground">THE KNOT</h1>
+        <img className="w-32" src="public/LOGO.png" />
       </NavLink>
         
       <NavLink  to="/config" className={({ isActive }) => cn( "p-1 transition-all duration-500", isActive ? "text-primary rotate-180" : "text-muted-foreground")}>

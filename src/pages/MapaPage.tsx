@@ -188,7 +188,7 @@ export default function MapaPage() {
                 </div>
                 <button
                   onClick={() => handleDelete(marker.id, marker.name)}
-                  className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                  className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-critical/20 text-muted-foreground hover:text-critical transition-colors shrink-0"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -229,7 +229,7 @@ export default function MapaPage() {
         </CardContent>
       </Card>
 
-      <Button onClick={openShareDialog} variant="safe" className="w-full text-white font-bold" size="lg">
+      <Button onClick={openShareDialog} className="bg-primary/70 w-full text-white font-bold" size="lg">
         <Share2 className="h-5 w-5 mr-2" />
         SHARE LOCATION
       </Button>

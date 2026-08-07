@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-secondary",
-        destructive: "bg-destructive text-destructive-foreground ",
+        destructive: "bg-critical text-critical-foreground ",
         outline: "border bg-secondary text-white",
         secondary: "bg-secondary text-secondary-foreground",
         ghost: "",
