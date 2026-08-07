@@ -7,7 +7,7 @@ export function Navbar() {
       <header className="z-40 flex items-center justify-between gap-2 px-4 py-3">
         
       <NavLink to="/" className="flex gap-2">
-        <img className="w-32" src="public/LOGO.png" />
+        <img className="w-32" src="/LOGO.png" />
       </NavLink>
         
       <NavLink  to="/config" className={({ isActive }) => cn( "p-1 transition-all duration-500", isActive ? "text-primary rotate-180" : "text-muted-foreground")}>
