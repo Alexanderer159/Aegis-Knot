@@ -172,6 +172,25 @@ export function useSupplies() {
     }
   }, [user?.knotId]);
 
+  const adjustHave = useCallback(async (id: string, delta: number) => {
+    setSupplies((prev) => {
+      const next = prev.map((s) =>
+        s.id === id ? { ...s, have: Math.max(0, Math.min(s.need, s.have + delta)) } : s
+      );
+      if (user?.knotId) saveCachedSupplies(user.knotId, next);
+      return next;
+    });
+
+    try {
+      const { error } = await supabase.rpc("adjust_supply_have", { p_id: id, p_delta: delta });
+      if (error) throw error;
+      return { error: null };
+    } catch {
+      enqueueAction("adjust_supply_have", { id, delta });
+      return { error: null };
+    }
+  }, [user?.knotId]);
+
   const removeSupply = useCallback(async (id: string) => {
     setSupplies((prev) => {
       const next = prev.filter((s) => s.id !== id);
@@ -189,5 +208,5 @@ export function useSupplies() {
     }
   }, [user?.knotId]);
 
-  return { supplies, loading, isOffline, addSupply, updateSupply, removeSupply, refetch: () => fetchSupplies(true) };
+  return { supplies, loading, isOffline, addSupply, updateSupply, adjustHave, removeSupply, refetch: () => fetchSupplies(true) };
 }

@@ -206,6 +206,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_supply_have: {
+        Args: { p_delta: number; p_id: string }
+        Returns: undefined
+      }
       create_knot: {
         Args: { p_display_name: string; p_knot_name?: string }
         Returns: {

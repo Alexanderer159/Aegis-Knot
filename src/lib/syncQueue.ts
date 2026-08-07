@@ -5,7 +5,8 @@ export type QueuedActionType =
   | "share_location"
   | "update_name"
   | "add_supply"
-  | "update_supply"
+  | "adjust_supply_have"
+  | "update_supply"        // now only for need/acquired, not have
   | "remove_supply"
   | "add_marker"
   | "remove_marker";
@@ -82,6 +83,13 @@ async function executeAction(action: QueuedAction, idMap: Record<string, string>
           last_check_in: new Date().toISOString(),
         })
         .eq("user_id", p.userId);
+      if (error) throw error;
+      return {};
+    }
+
+    case "adjust_supply_have": {
+      const id = resolveId(p.id, idMap);
+      const { error } = await supabase.rpc("adjust_supply_have", { p_id: id, p_delta: p.delta });
       if (error) throw error;
       return {};
     }

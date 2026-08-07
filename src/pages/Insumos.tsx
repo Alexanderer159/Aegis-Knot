@@ -19,7 +19,7 @@ function sliderColor(percent: number) {
 }
 
 export default function Insumos() {
-  const { supplies, loading, addSupply, updateSupply, removeSupply } = useSupplies();
+  const { supplies, loading, addSupply, updateSupply, adjustHave, removeSupply } = useSupplies();
   const [filter, setFilter] = useState<string>("all");
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -31,17 +31,14 @@ export default function Insumos() {
   const [newNeed, setNewNeed] = useState("1");
   const [newUnit, setNewUnit] = useState("uds");
 
-  const setHave = (item: Supply, value: number) => {
-    const clamped = Math.max(0, Math.min(value, item.need));
-    updateSupply(item.id, { have: clamped });
-  };
-
-  const increment = (item: Supply) => {
-    setHave(item, item.have + 1);
-  };
-
-  const decrement = (item: Supply) => {
-    setHave(item, item.have - 1);
+  // All "have" changes route through adjustHave as a delta, so concurrent
+  // offline edits from different people compose correctly instead of
+  // one overwriting the other when both come back online.
+  const increment = (item: Supply) => adjustHave(item.id, 1);
+  const decrement = (item: Supply) => adjustHave(item.id, -1);
+  const setHave = (item: Supply, newValue: number) => {
+    const clamped = Math.max(0, Math.min(newValue, item.need));
+    adjustHave(item.id, clamped - item.have);
   };
 
   const toggleAcquired = (item: Supply) => {
