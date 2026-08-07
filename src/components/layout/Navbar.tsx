@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function Navbar() {
   return (
-      <header className="z-40 flex items-center justify-between gap-2 px-4 py-3">
+      <header className="z-40 flex items-center justify-between gap-2 p-4">
         
       <NavLink to="/" className="flex gap-2">
         <img className="w-32" src="/LOGO.png" />
@@ -14,9 +14,6 @@ export function Navbar() {
         <Settings />
       </NavLink>
    
-        
-      
-        
       </header>
   );
 }

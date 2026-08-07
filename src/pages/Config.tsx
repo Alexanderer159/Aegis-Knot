@@ -105,7 +105,6 @@ export default function Config() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl text-center font-heading tracking-widest">PROFILE</h2>
 
       <InstallAppCard />
 
@@ -118,12 +117,7 @@ export default function Config() {
           <div className="flex items-center gap-3 px-2 py-2">
             <User className="h-4 w-4 text-primary shrink-0" />
             <span className="text-sm flex-1">Operator Name</span>
-            <Input
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              onBlur={handleNameBlur}
-              className="w-36 h-8 text-xs bg-secondary border-border text-right"
-            />
+            <Input value={nameInput} onChange={(e) => setNameInput(e.target.value)} onBlur={handleNameBlur} className="w-36 h-8 text-xs bg-secondary border-border text-right" />
           </div>
           <div className="flex items-center gap-3 px-2 py-2">
             <Shield className="h-4 w-4 text-primary shrink-0" />
@@ -146,7 +140,7 @@ export default function Config() {
             )}
           </div>
           {isVanguard && (
-            <p className="text-[10px] text-muted-foreground px-2">
+            <p className="text-xs text-foreground px-2">
               As Vanguard, your role is fixed. Delete the Knot if you need to step down.
             </p>
           )}
@@ -159,17 +153,15 @@ export default function Config() {
           <CardTitle className="text-xs text-muted-foreground">Knot Code</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3 px-2 py-2">
+          <div className="flex items-center gap-3 p-2">
             <span className="text-lg font-mono font-bold tracking-widest flex-1">
               {knotCode ?? "···"}
             </span>
             <Button variant="outline" size="sm" onClick={copyCode} disabled={!knotCode}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground px-2">
-            Share this code so others can join your Knot.
-          </p>
+          <p className="text-xs text-foreground px-2">Share this code so others can join your Knot.</p>
         </CardContent>
       </Card>
 
@@ -204,7 +196,7 @@ export default function Config() {
       {isVanguard && (
         <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeleteConfirmInput(""); }}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full border-critical/50 text-critical">
+            <Button variant="outline" className="w-full text-critical">
               <Trash2 className="h-4 w-4 mr-2" /> DELETE KNOT
             </Button>
           </DialogTrigger>
@@ -232,7 +224,7 @@ export default function Config() {
               </Button>
               <Button
                 variant="destructive"
-                className="flex-1"
+                className="flex-1 "
                 onClick={handleDelete}
                 disabled={deleting || deleteConfirmInput !== knotCode}
               >
@@ -245,7 +237,7 @@ export default function Config() {
 
       
 
-      <Button variant="outline" className="w-full border-critical/50 text-critical" onClick={signOut}>
+      <Button variant="outline" className="w-full border-0 text-warning" onClick={signOut}>
         <LogOut className="h-4 w-4 mr-2" /> SIGN OUT
       </Button>
     </div>

@@ -38,7 +38,6 @@
 
     --border: 0 0% 16%;
     --input: 0 0% 16%;
-    --ring: 110 100% 55%;
 
     --radius: 0.75rem;
   }
@@ -72,11 +71,26 @@ body {
     font-weight: 700;
   }
 
-  .tactical-grid {
-    background-image: 
-      linear-gradient(hsl(110 100% 55% / 0.233) 1px, transparent 1px),
-      linear-gradient(90deg, hsla(110, 100%, 55%, 0.233) 1px, transparent 1px);
-    background-size: 50px 50px;
-  }
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--card) / 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
 
+.leaflet-popup-tip {
+  background: hsl(var(--card) / 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border: 1px solid hsl(var(--border));
+}
 
+.leaflet-popup-close-button {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: hsl(var(--foreground)) !important;
+}

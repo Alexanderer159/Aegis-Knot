@@ -21,11 +21,11 @@ export function InstallAppCard() {
       <Card className="tactical-border">
         <CardContent className="p-4 space-y-2">
           <p className="text-sm font-heading font-semibold flex items-center gap-2">
-            <Download className="h-4 w-4 text-primary" /> Install this app
+            <Download className="h-4 w-4 text-primary" /> Install this app!
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-foreground">
             {isIOS ? (
-              <>Tap <Share className="h-3 w-3 inline mx-0.5" /> Share, then <strong>"Add to Home Screen"</strong>.</>
+              <>Tap <Share className="h-3 w-3 inline" /> Share, then <strong>"Add to Home Screen"</strong>.</>
             ) : (
               <>In Safari's menu bar, go to <strong>File → Add to Dock</strong>.</>
             )}

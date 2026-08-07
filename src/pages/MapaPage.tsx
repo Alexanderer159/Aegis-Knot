@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MapPin, AlertTriangle, Droplets, Home, Navigation, Share2, Users, Plus, Trash2, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,11 +39,17 @@ const allCategories: MarkerCategory[] = ["meeting", "danger", "resource", "shelt
 
 const statusColors: Record<string, string> = {
   ok: "bg-safe",
-  help: "bg-warning",
-  critical: "bg-critical",
+  help: "bg-warning animate-pulse-glow",
+  critical: "bg-critical animate-pulse-glow",
 };
 
 export default function MapaPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const focusPoint = location.state?.focusLat && location.state?.focusLng
+    ? { lat: location.state.focusLat, lng: location.state.focusLng }
+    : null;
+
   const podMembers = usePodLocations();
   const { markers, addMarker, removeMarker } = useMapMarkers();
   const { user, shareLocation } = useLocalUser();
@@ -80,13 +87,18 @@ export default function MapaPage() {
     setShowAdd(false);
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation();
     const { error } = await removeMarker(id);
     if (error) {
       toast({ title: "Couldn't delete point", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Point deleted", description: name });
     }
+  };
+
+  const goToLocation = (lat: number, lng: number) => {
+    navigate("/mapa", { state: { focusLat: lat, focusLng: lng } });
   };
 
   const openShareDialog = () => {
@@ -121,7 +133,6 @@ export default function MapaPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-3xl text-center">MAP</h2>
 
       {/* Live Pod Members */}
       {podMembers.length > 0 && (
@@ -133,35 +144,45 @@ export default function MapaPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {podMembers.map((member) => (
-              <div key={member.id} className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                  {member.avatar_initials}
+            {podMembers.map((member) => {
+              const hasValidLocation = member.latitude && member.longitude && !(member.latitude === 0 && member.longitude === 0);
+              return (
+                <div
+                  key={member.id}
+                  onClick={() => hasValidLocation && goToLocation(member.latitude!, member.longitude!)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2",
+                    hasValidLocation && "cursor-pointer hover:bg-secondary/80 transition-colors"
+                  )}
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                    {member.avatar_initials}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-heading font-semibold">{member.display_name}</p>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {hasValidLocation ? (
+                        <>
+                          {member.latitude.toFixed(4)}, {member.longitude.toFixed(4)}
+                          {member.location_updated_at && (
+                            <> · {new Date(member.location_updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
+                          )}
+                        </>
+                      ) : (
+                        "Location unknown"
+                      )}
+                    </p>
+                  </div>
+                  <span className={cn("h-2.5 w-2.5 rounded-full", statusColors[member.status || ""] || "bg-muted-foreground")} />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-heading font-semibold">{member.display_name}</p>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    {member.latitude && member.longitude && !(member.latitude === 0 && member.longitude === 0) ? (
-                      <>
-                        {member.latitude.toFixed(4)}, {member.longitude.toFixed(4)}
-                        {member.location_updated_at && (
-                          <> · {new Date(member.location_updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
-                        )}
-                      </>
-                    ) : (
-                      "Location unknown"
-                    )}
-                  </p>
-                </div>
-                <span className={cn("h-2.5 w-2.5 rounded-full", statusColors[member.status || ""] || "bg-muted-foreground")} />
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}
 
       {/* Map Preview */}
-      <AegisMap heightClass="h-60" />
+      <AegisMap heightClass="h-60" focusPoint={focusPoint} />
 
       {/* Points of Interest */}
       <Card className="tactical-border">
@@ -175,7 +196,11 @@ export default function MapaPage() {
           {markers.map((marker) => {
             const Icon = markerIcons[marker.category];
             return (
-              <div key={marker.id} className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5">
+              <div
+                key={marker.id}
+                onClick={() => goToLocation(marker.latitude, marker.longitude)}
+                className="flex items-center gap-3 rounded-lg bg-secondary/50 px-3 py-2.5 cursor-pointer hover:bg-secondary/80 transition-colors"
+              >
                 <Icon className={cn("h-4 w-4", markerColors[marker.category])} />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -187,7 +212,7 @@ export default function MapaPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => handleDelete(marker.id, marker.name)}
+                  onClick={(e) => handleDelete(e, marker.id, marker.name)}
                   className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-critical/20 text-muted-foreground hover:text-critical transition-colors shrink-0"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -229,7 +254,7 @@ export default function MapaPage() {
         </CardContent>
       </Card>
 
-      <Button onClick={openShareDialog} className="bg-primary/70 w-full text-white font-bold" size="lg">
+      <Button onClick={openShareDialog} className="bg-primary w-full text-black font-bold" size="lg">
         <Share2 className="h-5 w-5 mr-2" />
         SHARE LOCATION
       </Button>

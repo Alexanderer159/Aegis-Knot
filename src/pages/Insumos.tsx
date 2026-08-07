@@ -13,9 +13,9 @@ import { categoryColors } from "@/lib/supplies";
 const allCategories: SupplyCategory[] = ["Water", "Food", "Medicine", "Energy", "Tools", "Communications"];
 
 function sliderColor(percent: number) {
-  if (percent >= 100) return "bg-primary";
-  if (percent >= 50) return "bg-warning";
-  return "bg-critical";
+  if (percent >= 100) return "bg-safe";
+  if (percent >= 50) return "bg-primary";
+  return "bg-warning";
 }
 
 export default function Insumos() {
@@ -104,7 +104,6 @@ export default function Insumos() {
     <div className="space-y-5">
       {/* Header Stats */}
       <section className="space-y-3">
-        <h2 className="text-3xl text-center text-foreground">SUPPLIES</h2>
         <Card className="">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -146,14 +145,14 @@ export default function Insumos() {
             <Card key={item.id} className="transition-all">
               <CardContent className="py-3 px-4 space-y-2">
                 <div className="flex items-center gap-3">
-                  <button onClick={() => toggleAcquired(item)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                      item.acquired ? "bg-primary border-primary" : isComplete ? "border-primary" : "border-muted-foreground/30")}>
+                  <button onClick={() => toggleAcquired(item)} className={cn("shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all",
+                    item.acquired ? "bg-safe border-safe" : isComplete ? "border-safe" : "border-muted-foreground/30")}>
                     {item.acquired && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
                   </button>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      
+
                       <div className="flex items-center gap-2">
                         <span className={cn("text-sm font-heading font-semibold", item.acquired && "text-muted-foreground")}>
                           {item.name}
@@ -199,7 +198,7 @@ export default function Insumos() {
                             autoFocus
                           />
                         ) : (
-                          <button onClick={() => startEditNeed(item)} className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors">
+                          <button onClick={() => startEditNeed(item)} className="text-xs font-mono text-muted-foreground hover:text-primary transition-all">
                             {item.need}
                           </button>
                         )}
@@ -219,9 +218,13 @@ export default function Insumos() {
                       rangeClassName={sliderColor(percent)}
                     />
 
-                    {missing > 0 && !item.acquired && (
+                    {missing > 0 && !item.acquired ? (
                       <span className="text-[10px] text-warning">
                         {missing} {item.unit} missing
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-safe">
+                        Complete
                       </span>
                     )}
                   </div>

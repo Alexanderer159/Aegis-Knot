@@ -51,25 +51,31 @@ interface Props {
 export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar, status, lastCheckIn, onClose }: Props) {
   const [items, setItems] = useState<RoleContentItem[]>([]);
   const [newItem, setNewItem] = useState("");
-  const {supplies} = useSupplies()
+  const { supplies } = useSupplies();
 
-  const isTaskRole = role ? taskRoles.includes(role) : false;
+  // Keep the last non-null role around so content doesn't vanish mid-close-animation
+  const [displayRole, setDisplayRole] = useState<RoleType | null>(role);
+  useEffect(() => {
+    if (role) setDisplayRole(role);
+  }, [role]);
+
+  const isTaskRole = displayRole ? taskRoles.includes(displayRole) : false;
 
   useEffect(() => {
     if (!role) return;
     if (taskRoles.includes(role)) {
       setItems(loadItems(role));
-    } 
+    }
   }, [role]);
 
-  if (!role) return null;
+  if (!displayRole) return null; // only truly unmount once nothing has ever been shown
 
-  const Icon = roleIcons[role];
-  const isList = role === "vanguard" || "navigator";
+  const Icon = roleIcons[displayRole];
+  const isVanguard = displayRole === "vanguard";
 
   const persist = (updated: RoleContentItem[]) => {
     setItems(updated);
-    saveItems(role, updated);
+    saveItems(displayRole, updated);
   };
 
   const toggleItem = (id: string) => {
@@ -78,7 +84,7 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
 
   const addItem = () => {
     if (!newItem.trim()) return;
-    persist([...items, { id: Date.now().toString(), text: newItem.trim(), checked: isList ? undefined : false }]);
+    persist([...items, { id: Date.now().toString(), text: newItem.trim(), checked: isVanguard ? undefined : false }]);
     setNewItem("");
   };
 
@@ -86,18 +92,16 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
     persist(items.filter(i => i.id !== id));
   };
 
-  const relevantCategories = roleCategoryMap[role] || [];
+  const relevantCategories = roleCategoryMap[displayRole] || [];
   const filteredSupplies = supplies.filter(s => relevantCategories.includes(s.category));
-
-  const initials = userName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <Sheet open={!!role} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="max-h-[80vh] bg-card border-t border-primary/20">
+      <SheetContent side="bottom" className="max-h-[80vh] bg-card/50 backdrop-blur-md z-[950]">
         <SheetHeader className="pb-3">
           <SheetTitle className="flex items-center gap-2 text-foreground">
             <Icon className="h-5 w-5 text-primary" />
-            {roleLabels[role]}
+            {roleLabels[displayRole]}
           </SheetTitle>
         </SheetHeader>
 
@@ -106,16 +110,16 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
           <div className="flex-1 min-w-0">
             <p className="font-heading font-bold truncate text-xl">{userName}</p>
             {lastCheckIn && (
-              <p className="text-xs text-muted-foreground">Last check-in: {new Date(lastCheckIn).toLocaleString([], {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })}</p>
+              <p className="text-xs text-muted-foreground">
+                Last check-in: {new Date(lastCheckIn).toLocaleString([], { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              </p>
             )}
           </div>
-          <Button variant={status === "ok" ? "safe" : status === "help" ? "warning" : status === "critical" ? "critical" : "outline"} size="sm" className="shrink-0">
-            <span className="text-sm text-white">
+          <Button size="sm" className="shrink-0 bg-transparent">
+            <span className={cn(
+              "text-xl",
+              status === "ok" ? "text-safe" : status === "help" ? "text-warning" : status === "critical" ? "text-critical" : "text-outline"
+            )}>
               {status === "ok" ? "Ok" : status === "help" ? "Help" : status === "critical" ? "Critical" : "Offline"}
             </span>
           </Button>
@@ -132,12 +136,12 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
             <>
               {items.map((item) => (
                 <div key={item.id} className="flex items-center gap-2 rounded-lg bg-secondary/50 px-3 py-2">
-                  {!isList && (
+                  {!isVanguard && (
                     <Checkbox checked={!!item.checked} onCheckedChange={() => toggleItem(item.id)}
-                      className="border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:border-primary"/>
+                      className="border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                   )}
-                  <span className={cn("text-sm flex-1", !isList && item.checked && "line-through text-muted-foreground")}>
-                    {isList && "• "}{item.text}
+                  <span className={cn("text-sm flex-1", !isVanguard && item.checked && "line-through text-muted-foreground")}>
+                    {isVanguard && "• "}{item.text}
                   </span>
                   {isCurrentUser && (
                     <button onClick={() => removeItem(item.id)} className="text-critical p-1">
@@ -188,10 +192,10 @@ export default function RoleDetailSheet({ role, isCurrentUser, userName, avatar,
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addItem()}
-              placeholder={isList ? "Add entry to list..." : "Add task..."}
+              placeholder={isVanguard ? "Add entry to list..." : "Add task..."}
               className="bg-secondary border-border text-sm"
             />
-            <Button variant="safe" size="sm" onClick={addItem}>
+            <Button size="sm" onClick={addItem}>
               <Plus className="h-4 w-4" />
             </Button>
           </div>

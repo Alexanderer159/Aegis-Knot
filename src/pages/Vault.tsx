@@ -28,7 +28,6 @@ export default function Vault() {
 
   return (
     <div className="space-y-5">
-      <h2 className="text-3xl text-center">GUIDES</h2>
 
       {/* Search */}
       <div className="relative">
@@ -39,7 +38,7 @@ export default function Vault() {
       {/* Category Tabs */}
       <div className="grid gap-2 ">
         {categories.map((cat) => (
-          <Button key={cat} onClick={() => setSelectedCat(cat)} className={selectedCat === cat ? "bg-primary text-white font-semibold" : "bg-secondary text-white font-semibold"} >
+          <Button key={cat} onClick={() => setSelectedCat(cat)} className={selectedCat === cat ? "bg-primary/80 text-white font-semibold" : "bg-secondary text-white font-semibold"} >
             {cat}
           </Button>
         ))}

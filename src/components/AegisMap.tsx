@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useMapMarkers, type MarkerCategory } from "@/hooks/useMapMarkers";
 import { usePodLocations } from "@/hooks/useLocationSharing";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +38,7 @@ function poiIcon(type: string) {
   const color = markerColors[type] || "#9ca3af";
   return L.divIcon({
     className: "",
-    html: `<div style="width: 16px; height: 16px; border-radius: 9999px; background: ${color}; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
+    html: `<div style="width: 16px; height: 16px; border-radius: 9999px; background: ${color}; ;"></div>`,
     iconSize: [16, 16],
     iconAnchor: [8, 8],
   });
@@ -50,8 +51,7 @@ function memberIcon(status: string | null | undefined) {
     html: `
       <div style="
         width: 28px; height: 28px; border-radius: 9999px;
-        background: ${color}; border: 2px solid white;
-        box-shadow: 0 0 6px rgba(0,0,0,0.6);
+        background: ${color};
         display: flex; align-items: center; justify-content: center;
       ">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -68,7 +68,7 @@ function memberIcon(status: string | null | undefined) {
 function pendingIcon() {
   return L.divIcon({
     className: "",
-    html: `<div style="width: 18px; height: 18px; border-radius: 9999px; background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.8);"></div>`,
+    html: `<div style="width: 18px; height: 18px; border-radius: 9999px; background: #fef400;"></div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
   });
@@ -79,6 +79,14 @@ function InvalidateOnMount() {
   useEffect(() => {
     setTimeout(() => map.invalidateSize(), 100);
   }, [map]);
+  return null;
+}
+
+function RecenterMap({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
   return null;
 }
 
@@ -94,12 +102,14 @@ function LongPressListener({ onPick }: { onPick: (lat: number, lng: number) => v
 
 interface Props {
   heightClass?: string;
+  focusPoint?: { lat: number; lng: number } | null;
 }
 
-export default function AegisMap({ heightClass = "h-48" }: Props) {
+export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
   const [fullscreen, setFullscreen] = useState(false);
   const { markers, addMarker, removeMarker } = useMapMarkers();
   const podMembers = usePodLocations();
+  const { user: authUser } = useAuth();
   const { toast } = useToast();
 
   const [pendingPoint, setPendingPoint] = useState<{ lat: number; lng: number } | null>(null);
@@ -107,14 +117,39 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
   const [newCategory, setNewCategory] = useState<MarkerCategory>("meeting");
   const [submitting, setSubmitting] = useState(false);
 
-  const getCenter = (): [number, number] => {
-    if (markers.length > 0) {
-      const avgLat = markers.reduce((s, m) => s + m.latitude, 0) / markers.length;
-      const avgLng = markers.reduce((s, m) => s + m.longitude, 0) / markers.length;
-      return [avgLat, avgLng];
+  useEffect(() => {
+    if (focusPoint) {
+      setFullscreen(true);
     }
-    return [38.6989, -0.4738];
-  };
+  }, [focusPoint]);
+
+  const myLocation = (() => {
+    if (!authUser) return null;
+    const me = podMembers.find((m) => m.user_id === authUser.id);
+    if (me?.latitude && me?.longitude && !(me.latitude === 0 && me.longitude === 0)) {
+      return { lat: me.latitude, lng: me.longitude };
+    }
+    return null;
+  })();
+
+  const getCenter = (): [number, number] => {
+  // Priority 1: explicit focus point (e.g. jumped here from a member's card)
+  if (focusPoint) {
+    return [focusPoint.lat, focusPoint.lng];
+  }
+  // Priority 2: your own shared location
+  if (myLocation) {
+    return [myLocation.lat, myLocation.lng];
+  }
+  // Priority 3: average of existing map markers
+  if (markers.length > 0) {
+    const avgLat = markers.reduce((s, m) => s + m.latitude, 0) / markers.length;
+    const avgLng = markers.reduce((s, m) => s + m.longitude, 0) / markers.length;
+    return [avgLat, avgLng];
+  }
+  // Priority 4: fallback to Madrid
+  return [40.4168, -3.7038];
+};
 
   const handleConfirmAdd = async () => {
     if (!pendingPoint || !newName.trim()) return;
@@ -142,7 +177,9 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
       <div onClick={() => setFullscreen(true)} className={cn("relative w-full rounded-lg overflow-hidden tactical-border cursor-pointer group", heightClass)}>
         <div className="pointer-events-none absolute inset-0 z-0">
           <MapContainer center={getCenter()} zoom={13} scrollWheelZoom={false} dragging={false} doubleClickZoom={false} zoomControl={false} touchZoom={false} attributionControl={false} className="w-full h-full">
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
+            <RecenterMap center={getCenter()} />
+            <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"/>
+            
             {markers.map((marker) => (
               <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)} />
             ))}
@@ -167,7 +204,7 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
             <X className="h-5 w-5" />
           </button>
 
-{!pendingPoint && (
+          {!pendingPoint && (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] bg-card border border-border rounded-lg p-3 text-sm text-muted-foreground max-w-[220px] text-center">
               <span className="sm:hidden">Press and hold anywhere on the map to add a point</span>
               <span className="hidden sm:inline">Right click anywhere on the map to add a point</span>
@@ -175,10 +212,11 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
           )}
 
           <div className="w-full h-full">
-            <MapContainer center={getCenter()} zoom={13} scrollWheelZoom={true} dragging={true} doubleClickZoom={true} zoomControl={true} touchZoom={true} attributionControl={true} className="w-full h-full">
+            <MapContainer center={getCenter()} zoom={focusPoint ? 16 : 13} scrollWheelZoom={true} dragging={true} doubleClickZoom={true} zoomControl={true} touchZoom={true} attributionControl={true} className="w-full h-full">
               <InvalidateOnMount />
+              <RecenterMap center={getCenter()} />
               <LongPressListener onPick={(lat, lng) => setPendingPoint({ lat, lng })} />
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+              <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"/>
 
               {markers.map((marker) => (
                 <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)}>
@@ -210,7 +248,7 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
           </div>
 
           {pendingPoint && (
-            <div className="absolute bottom-0 left-0 right-0 z-[1100] bg-card border-t border-primary/30 p-4 space-y-3">
+            <div className="absolute bottom-0 left-0 right-0 z-[1100] bg-card/60 backdrop-blur-lg p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-heading font-semibold">
                 <MapPin className="h-4 w-4 text-primary" />
                 New Point
@@ -225,7 +263,7 @@ export default function AegisMap({ heightClass = "h-48" }: Props) {
                 ))}
               </select>
               <div className="flex gap-2">
-                <Button onClick={handleConfirmAdd} size="sm" className="flex-1" disabled={submitting || !newName.trim()}>
+                <Button onClick={handleConfirmAdd} size="sm" className="flex-1 text-black font-extrabold" disabled={submitting || !newName.trim()}>
                   {submitting ? "Adding..." : "Add Point"}
                 </Button>
                 <Button onClick={() => { setPendingPoint(null); setNewName(""); }} size="sm" variant="outline" className="flex-1">

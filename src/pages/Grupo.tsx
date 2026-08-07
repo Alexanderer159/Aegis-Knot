@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Shield, Heart, Compass, Radio, Package, HardHat, Users, UserPlus, Bell, Trash2, CheckCircle2, AlertTriangle, ShieldAlert, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export default function Grupo() {
   const { user, addDependent, removeDependent, shareLocation } = useLocalUser();
   const { toast } = useToast();
   const { roster } = useMembers();
+  const navigate = useNavigate();
   const [sheetRole, setSheetRole] = useState<RoleType | null>(null);
   const { supplies } = useSupplies();
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -82,6 +84,11 @@ export default function Grupo() {
     );
   };
 
+  const goToLocation = (e: React.MouseEvent, lat: number, lng: number) => {
+    e.stopPropagation(); // prevent the card's own onClick from also opening the role sheet
+    navigate("/mapa", { state: { focusLat: lat, focusLng: lng } });
+  };
+
   const sheetEntry = roster.find(r => r.role === sheetRole);
 
   return (
@@ -89,15 +96,15 @@ export default function Grupo() {
 
       {/* Status Buttons */}
       <div className="grid grid-cols-3 gap-3">
-        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-safe", user?.status === "ok" && "ring-2 ring-safe")} onClick={() => handleStatusClick("ok")}>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-white/70", user?.status === "ok" && "text-safe")} onClick={() => handleStatusClick("ok")}>
           <CheckCircle2 className="h-6 w-6" />
           <span className="text-xs">I´M OK</span>
         </Button>
-        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-warning", user?.status === "help" && "ring-2 ring-warning")} onClick={() => handleStatusClick("help")}>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-white/70", user?.status === "help" && "text-warning")} onClick={() => handleStatusClick("help")}>
           <AlertTriangle className="h-6 w-6" />
           <span className="text-xs">HELP</span>
         </Button>
-        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-critical", user?.status === "critical" && "ring-2 ring-critical")} onClick={() => handleStatusClick("critical")}>
+        <Button size="xl" disabled={updatingStatus} className={cn("flex-col gap-1 bg-secondary/70 text-white/70", user?.status === "critical" && "text-critical")} onClick={() => handleStatusClick("critical")}>
           <ShieldAlert className="h-6 w-6" />
           <span className="text-xs">CRITICAL</span>
         </Button>
@@ -108,8 +115,20 @@ export default function Grupo() {
         {roster.map((entry) => {
           const Icon = roleIcons[entry.role];
           const isCurrentUser = user?.role === entry.role;
+          const hasValidLocation = entry.filled && entry.latitude && entry.longitude && !(entry.latitude === 0 && entry.longitude === 0);
+
           return (
-            <Card key={entry.role} className={cn("transition-all", !entry.filled && "")} onClick={() => setSheetRole(entry.role)}>
+            <Card
+              key={entry.role}
+              className={cn("relative transition-all", !entry.filled && "")}
+              onClick={() => setSheetRole(entry.role)}
+            >
+              {/* Status dot, positioned at the card's top-right corner */}
+              <span className={cn("absolute top-2 right-2 h-2 w-2 rounded-full shrink-0",
+                entry.status === "ok" ? "bg-safe" :
+                entry.status === "help" ? "bg-warning animate-pulse-glow" :
+                entry.status === "critical" ? "bg-critical animate-pulse-glow" : ""
+              )} />
 
               <CardContent className="flex items-center justify-between gap-3 ">
 
@@ -129,22 +148,19 @@ export default function Grupo() {
                 </div>
 
                 <div className="flex flex-col justify-center items-center gap-2">
-
-                  <span className={cn("rounded-sm text-secondary font-bold text-xs text-white w-[50px] p-2 text-center shrink-0",
-                    entry.status === "ok" ? "bg-safe/70" : entry.status === "help" ? "bg-warning" : entry.status === "critical" ? "bg-critical" : "bg-muted-foreground")}>
-                    {entry.status === "ok" ? "Ok" : entry.status === "help" ? "Help" : entry.status === "critical" ? "Critical" : "Offline"}
-                  </span>
-
                   {!entry.filled ? (
                     <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                       <MapPin className="h-4 w-4 shrink-0" />
                       No Location
                     </p>
-                  ) : entry.latitude && entry.longitude && !(entry.latitude === 0 && entry.longitude === 0) ? (
-                    <p className="text-sm text-muted-foreground font-mono flex items-center gap-1 mt-0.5">
+                  ) : hasValidLocation ? (
+                    <button
+                      onClick={(e) => goToLocation(e, entry.latitude!, entry.longitude!)}
+                      className="text-sm text-muted-foreground font-mono flex items-center gap-1 mt-0.5 hover:text-primary transition-colors"
+                    >
                       <MapPin className="h-4 w-4 shrink-0 text-primary" />
-                      {entry.latitude.toFixed(4)}, {entry.longitude.toFixed(4)}
-                    </p>
+                      {entry.latitude!.toFixed(4)}, {entry.longitude!.toFixed(4)}
+                    </button>
                   ) : (
                     <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                       <MapPin className="h-4 w-4 shrink-0" />
@@ -201,43 +217,39 @@ export default function Grupo() {
                   <UserPlus className="h-4 w-4 mr-1" />Link</Button>
               </DialogTrigger>
 
-              <DialogContent className="">
-                <div className="bg-card p-5 rounded-md">
-                  <DialogHeader>
-                    <DialogTitle>Link Member</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleAddDependent} className="space-y-4 pt-2">
-                    <div className="space-y-2">
-                      <Label>Name</Label>
-                      <Input value={depName} onChange={(e) => setDepName(e.target.value)} placeholder="Full Name" className="bg-secondary border-border" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Relationship</Label>
-                      <Select value={depRelation} onValueChange={setDepRelation}>
-                        <SelectTrigger className="bg-secondary border-border">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Son/Daughter">Son/Daughter</SelectItem>
-                          <SelectItem value="Partner">Partner</SelectItem>
-                          <SelectItem value="Parent">Parent</SelectItem>
-                          <SelectItem value="Family member">Family member</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Usual Location</Label>
-                      <Input value={depLocation} onChange={(e) => setDepLocation(e.target.value)} placeholder="Home, Work, School..." className="bg-secondary border-border" />
-                    </div>
-                    <Button type="submit" className="bg-primary/70 w-full text-white font-semibold">
-                      <UserPlus className="h-4 w-4 mr-2" /> Link
-                    </Button>
-                  </form>
-                </div>
-
+              <DialogContent className="bg-card">
+                <DialogHeader>
+                  <DialogTitle>Link Member</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddDependent} className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <Label>Name</Label>
+                    <Input value={depName} onChange={(e) => setDepName(e.target.value)} placeholder="Full Name" className="bg-secondary border-border" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Relationship</Label>
+                    <Select value={depRelation} onValueChange={setDepRelation}>
+                      <SelectTrigger className="bg-secondary border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Son/Daughter">Son/Daughter</SelectItem>
+                        <SelectItem value="Partner">Partner</SelectItem>
+                        <SelectItem value="Parent">Parent</SelectItem>
+                        <SelectItem value="Family member">Family member</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Usual Location</Label>
+                    <Input value={depLocation} onChange={(e) => setDepLocation(e.target.value)} placeholder="Home, Work, School..." className="bg-secondary border-border" />
+                  </div>
+                  <Button type="submit" className="bg-primary w-full text-black font-bold">
+                    <UserPlus className="h-4 w-4 mr-2" /> Link
+                  </Button>
+                </form>
               </DialogContent>
-
 
             </Dialog>
 
