@@ -86,7 +86,7 @@ export default function Grupo() {
 
   const goToLocation = (e: React.MouseEvent, lat: number, lng: number) => {
     e.stopPropagation(); // prevent the card's own onClick from also opening the role sheet
-    navigate("/mapa", { state: { focusLat: lat, focusLng: lng } });
+    navigate("/map", { state: { focusLat: lat, focusLng: lng } });
   };
 
   const sheetEntry = roster.find(r => r.role === sheetRole);

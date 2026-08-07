@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin, AlertTriangle, Droplets, Home, Navigation, Share2, Users, Plus, Trash2, CheckCircle2, ShieldAlert } from "lucide-react";
+import { MapPin, AlertTriangle, Droplets, Home, Share2, Users, Plus, Trash2, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { useLocalUser } from "@/hooks/useLocalUser";
 import { useToast } from "@/hooks/use-toast";
 import AegisMap from "@/components/AegisMap";
 import type { StatusType } from "@/lib/store";
+import { useOfflineMarkerSync } from "@/hooks/useOfflineMarkerSync";
 
 const markerIcons: Record<MarkerCategory, React.ElementType> = {
   meeting: MapPin,
@@ -65,6 +66,21 @@ export default function MapaPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState<StatusType>("ok");
   const [locating, setLocating] = useState(false);
+  const { enabled: offlineEnabled, enable: enableOffline, disable: disableOffline, syncing, progress } = useOfflineMarkerSync();
+const [offlineConfirmOpen, setOfflineConfirmOpen] = useState(false);
+
+const handleOfflineToggle = (checked: boolean) => {
+  if (checked) {
+    enableOffline();
+  } else {
+    setOfflineConfirmOpen(true); // don't disable yet, confirm first
+  }
+};
+
+const confirmDisableOffline = () => {
+  disableOffline();
+  setOfflineConfirmOpen(false);
+};
 
   const handleAdd = async () => {
     const lat = parseFloat(newLat);
@@ -98,7 +114,7 @@ export default function MapaPage() {
   };
 
   const goToLocation = (lat: number, lng: number) => {
-    navigate("/mapa", { state: { focusLat: lat, focusLng: lng } });
+    navigate("/map", { state: { focusLat: lat, focusLng: lng } });
   };
 
   const openShareDialog = () => {
@@ -183,6 +199,47 @@ export default function MapaPage() {
 
       {/* Map Preview */}
       <AegisMap heightClass="h-60" focusPoint={focusPoint} />
+
+<Card className="tactical-border">
+  <CardHeader className="pb-3">
+    <CardTitle className="text-base">OFFLINE MAPS</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-3">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <span className="text-sm">Auto-download around your points</span>
+        <p className="text-xs text-muted-foreground">Keeps the map ready offline near every point you place</p>
+      </div>
+      <Switch checked={offlineEnabled} onCheckedChange={handleOfflineToggle} />
+    </div>
+
+    {offlineEnabled && syncing && (
+      <div className="space-y-1">
+        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+          <div className="h-full bg-primary transition-all" style={{ width: progress.total ? `${(progress.done / progress.total) * 100}%` : "0%" }} />
+        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Syncing: {progress.done} / {progress.total} tiles
+        </p>
+      </div>
+    )}
+  </CardContent>
+</Card>
+
+<Dialog open={offlineConfirmOpen} onOpenChange={setOfflineConfirmOpen}>
+  <DialogContent className="bg-card">
+    <DialogHeader>
+      <DialogTitle>Turn off offline maps?</DialogTitle>
+    </DialogHeader>
+    <p className="text-sm text-muted-foreground">
+      This deletes all map data cached for your points. You'll need an internet connection to view the map again until you turn this back on.
+    </p>
+    <div className="flex gap-2 pt-2">
+      <Button variant="outline" className="flex-1" onClick={() => setOfflineConfirmOpen(false)}>Cancel</Button>
+      <Button variant="destructive" className="flex-1" onClick={confirmDisableOffline}>Turn Off & Delete</Button>
+    </div>
+  </DialogContent>
+</Dialog>
 
       {/* Points of Interest */}
       <Card className="tactical-border">

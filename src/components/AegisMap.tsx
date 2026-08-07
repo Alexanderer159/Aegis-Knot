@@ -10,6 +10,9 @@ import { usePodLocations } from "@/hooks/useLocationSharing";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { CachedMapTiles } from "@/components/CachedMapTiles";
+
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -178,7 +181,7 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
         <div className="pointer-events-none absolute inset-0 z-0">
           <MapContainer center={getCenter()} zoom={13} scrollWheelZoom={false} dragging={false} doubleClickZoom={false} zoomControl={false} touchZoom={false} attributionControl={false} className="w-full h-full">
             <RecenterMap center={getCenter()} />
-            <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"/>
+            <CachedMapTiles url={TILE_URL}  />
             
             {markers.map((marker) => (
               <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)} />
@@ -216,7 +219,7 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
               <InvalidateOnMount />
               <RecenterMap center={getCenter()} />
               <LongPressListener onPick={(lat, lng) => setPendingPoint({ lat, lng })} />
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"/>
+              <CachedMapTiles url={TILE_URL}  />
 
               {markers.map((marker) => (
                 <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)}>

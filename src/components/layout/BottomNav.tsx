@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", icon: Users, label: "Knot" },
-  { to: "/mapa", icon: Map, label: "Map" },
-  { to: "/insumos", icon: Package, label: "Supplies" },
+  { to: "/map", icon: Map, label: "Map" },
+  { to: "/supplies", icon: Package, label: "Supplies" },
   { to: "/vault", icon: BookOpen, label: "Guides" },
 ];
 

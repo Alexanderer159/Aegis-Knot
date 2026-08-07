@@ -25,7 +25,7 @@ function Gate({ children }: { children: React.ReactNode }) {
   if (authLoading || userLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-primary font-heading text-xl">THE KNOT</div>
+        <div className="text-primary font-heading text-xl">THE_KNOT_</div>
       </div>
     );
   }
@@ -48,8 +48,8 @@ const App = () => (
               <Route path="/setup" element={<KnotSetup />} />
               <Route element={<Gate><AppLayout /></Gate>}>
                 <Route path="/" element={<Grupo />} />
-                <Route path="/mapa" element={<MapaPage />} />
-                <Route path="/insumos" element={<Insumos />} />
+                <Route path="/map" element={<MapaPage />} />
+                <Route path="/supplies" element={<Insumos />} />
                 <Route path="/activity" element={<Activity />} />
                 <Route path="/vault" element={<Vault />} />
                 <Route path="/config" element={<Config />} />
