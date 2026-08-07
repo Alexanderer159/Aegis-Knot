@@ -178,7 +178,7 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
         <div className="pointer-events-none absolute inset-0 z-0">
           <MapContainer center={getCenter()} zoom={13} scrollWheelZoom={false} dragging={false} doubleClickZoom={false} zoomControl={false} touchZoom={false} attributionControl={false} className="w-full h-full">
             <RecenterMap center={getCenter()} />
-            <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"/>
+            <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"/>
             
             {markers.map((marker) => (
               <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)} />
@@ -216,7 +216,7 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
               <InvalidateOnMount />
               <RecenterMap center={getCenter()} />
               <LongPressListener onPick={(lat, lng) => setPendingPoint({ lat, lng })} />
-              <TileLayer url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"/>
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"/>
 
               {markers.map((marker) => (
                 <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)}>
