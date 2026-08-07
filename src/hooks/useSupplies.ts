@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalUser } from "@/hooks/useLocalUser";
 import type { Tables, Enums } from "@/integrations/supabase/types";
+import { enqueueAction } from "@/lib/syncQueue";
 
 export type Supply = Tables<"supplies">;
 export type SupplyCategory = Enums<"supply_category">;
@@ -84,8 +85,17 @@ export function useSupplies() {
     };
   }, [user?.knotId, fetchSupplies]);
 
+  // Once the sync queue drains and we're back online, refetch so any
+  // resolved temp IDs / queued changes are replaced with the real server state
+  useEffect(() => {
+    const handler = () => fetchSupplies(false);
+    window.addEventListener("knot-sync-complete", handler);
+    return () => window.removeEventListener("knot-sync-complete", handler);
+  }, [fetchSupplies]);
+
   const addSupply = useCallback(async (item: { name: string; category: SupplyCategory; need: number; unit: string }) => {
     if (!user?.knotId) return { error: new Error("No knot") };
+
     try {
       const { data, error } = await supabase
         .from("supplies")
@@ -109,8 +119,37 @@ export function useSupplies() {
         });
       }
       return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+    } catch {
+      // Offline: create it locally with a temp ID so the UI works immediately,
+      // and queue the real insert for when we're back online
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const optimistic: Supply = {
+        id: tempId,
+        knot_id: user.knotId,
+        name: item.name,
+        category: item.category,
+        need: item.need,
+        unit: item.unit,
+        have: 0,
+        acquired: false,
+        created_at: new Date().toISOString(),
+      } as Supply;
+
+      setSupplies((prev) => {
+        const next = [...prev, optimistic];
+        saveCachedSupplies(user.knotId, next);
+        return next;
+      });
+
+      enqueueAction("add_supply", {
+        tempId,
+        knotId: user.knotId,
+        name: item.name,
+        category: item.category,
+        need: item.need,
+        unit: item.unit,
+      });
+      return { error: null };
     }
   }, [user?.knotId]);
 
@@ -125,10 +164,11 @@ export function useSupplies() {
       const { error } = await supabase.from("supplies").update(changes).eq("id", id);
       if (error) throw error;
       return { error: null };
-    } catch (error) {
-      // Offline: keep the optimistic local/cached update, don't roll back,
-      // the realtime sync (or a future auto-sync queue) reconciles once online
-      return { error: error as Error };
+    } catch {
+      // Offline: keep the optimistic local/cached update, queue the real
+      // write so it replays once connectivity returns
+      enqueueAction("update_supply", { id, changes });
+      return { error: null };
     }
   }, [user?.knotId]);
 
@@ -143,8 +183,9 @@ export function useSupplies() {
       const { error } = await supabase.from("supplies").delete().eq("id", id);
       if (error) throw error;
       return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+    } catch {
+      enqueueAction("remove_supply", { id });
+      return { error: null };
     }
   }, [user?.knotId]);
 

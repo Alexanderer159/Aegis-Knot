@@ -99,6 +99,14 @@ export function useMembers() {
     };
   }, [user?.knotId, fetchMembers]);
 
+  // Once the sync queue drains and we're back online, refetch so any
+  // status/location/name changes queued while offline show up for everyone
+  useEffect(() => {
+    const handler = () => fetchMembers(false);
+    window.addEventListener("knot-sync-complete", handler);
+    return () => window.removeEventListener("knot-sync-complete", handler);
+  }, [fetchMembers]);
+
   const roster: RosterEntry[] = allRoles.map((role) => {
     const match = members.find((m) => m.role === role);
     if (match) {

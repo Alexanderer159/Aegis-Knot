@@ -15,6 +15,7 @@ import Activity from "@/pages/Activity";
 import Vault from "@/pages/Vault";
 import Config from "@/pages/Config";
 import NotFound from "@/pages/NotFound";
+import { SyncProvider } from "@/hooks/useSyncQueue";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <LocalUserProvider>
+          <SyncProvider>
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
@@ -57,6 +59,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
+          </SyncProvider>
         </LocalUserProvider>
       </AuthProvider>
     </TooltipProvider>

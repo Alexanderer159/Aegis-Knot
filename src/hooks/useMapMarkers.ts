@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalUser } from "@/hooks/useLocalUser";
 import type { Tables, Enums } from "@/integrations/supabase/types";
+import { enqueueAction } from "@/lib/syncQueue";
 
 export type MapMarker = Tables<"map_markers">;
 export type MarkerCategory = Enums<"marker_category">;
@@ -81,8 +82,17 @@ export function useMapMarkers() {
     };
   }, [user?.knotId, fetchMarkers]);
 
+  // Once the sync queue drains and we're back online, refetch so any
+  // resolved temp IDs / queued changes are replaced with the real server state
+  useEffect(() => {
+    const handler = () => fetchMarkers(false);
+    window.addEventListener("knot-sync-complete", handler);
+    return () => window.removeEventListener("knot-sync-complete", handler);
+  }, [fetchMarkers]);
+
   const addMarker = useCallback(async (marker: { name: string; category: MarkerCategory; latitude: number; longitude: number }) => {
     if (!user?.knotId) return { error: new Error("No knot") };
+
     try {
       const { data: authData } = await supabase.auth.getUser();
       const { data, error } = await supabase
@@ -106,8 +116,39 @@ export function useMapMarkers() {
         });
       }
       return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+    } catch {
+      // Offline: create it locally with a temp ID so the UI works immediately,
+      // and queue the real insert for when we're back online
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const { data: authData } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+
+      const optimistic: MapMarker = {
+        id: tempId,
+        knot_id: user.knotId,
+        name: marker.name,
+        category: marker.category,
+        latitude: marker.latitude,
+        longitude: marker.longitude,
+        created_by: authData.user?.id ?? null,
+        created_at: new Date().toISOString(),
+      } as MapMarker;
+
+      setMarkers((prev) => {
+        const next = [...prev, optimistic];
+        saveCachedMarkers(user.knotId, next);
+        return next;
+      });
+
+      enqueueAction("add_marker", {
+        tempId,
+        knotId: user.knotId,
+        name: marker.name,
+        category: marker.category,
+        latitude: marker.latitude,
+        longitude: marker.longitude,
+        createdBy: authData.user?.id,
+      });
+      return { error: null };
     }
   }, [user?.knotId]);
 
@@ -122,8 +163,9 @@ export function useMapMarkers() {
       const { error } = await supabase.from("map_markers").delete().eq("id", id);
       if (error) throw error;
       return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+    } catch {
+      enqueueAction("remove_marker", { id });
+      return { error: null };
     }
   }, [user?.knotId]);
 
