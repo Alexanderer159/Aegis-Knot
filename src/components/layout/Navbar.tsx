@@ -8,7 +8,7 @@ export function Navbar() {
         
       <NavLink to="/" className="flex gap-2">
         <Shield className="h-8 w-8 text-primary" />
-        <h1 className="text-lg font-heading font-bold tracking-widest text-foreground">AEGIS KNOT</h1>
+        <h1 className="text-lg font-heading font-bold tracking-widest text-foreground">THE KNOT</h1>
       </NavLink>
         
       <NavLink  to="/config" className={({ isActive }) => cn( "p-1 transition-all duration-500", isActive ? "text-primary rotate-180" : "text-muted-foreground")}>

@@ -19,7 +19,7 @@ export default function Auth() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-primary font-heading text-xl">AEGIS KNOT</div>
+        <div className="animate-pulse text-primary font-heading text-xl">THE KNOT</div>
       </div>
     );
   }
@@ -51,7 +51,7 @@ export default function Auth() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="flex items-center gap-3 mb-8">
         <Shield className="h-10 w-10 text-primary" />
-        <h1 className="text-3xl font-heading font-black text-white tracking-wider">AEGIS KNOT</h1>
+        <h1 className="text-3xl font-heading font-black text-white tracking-wider">THE KNOT</h1>
       </div>
 
       <Card className="w-full max-w-sm tactical-border">
@@ -69,7 +69,7 @@ export default function Auth() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="operator@aegis.net"
+                placeholder="operator@Theknot.net"
                 required
                 className="bg-secondary border-border"
               />

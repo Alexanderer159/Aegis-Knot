@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
     enabled: true // <-- ADD THIS LINE
   },
       manifest: {
-        name: "Aegis Knot",
-        short_name: "Aegis Knot",
+        name: "The Knot",
+        short_name: "The Knot",
         description: "Survival coordination for your group",
         theme_color: "#000000",
         background_color: "#000000",
