@@ -169,15 +169,15 @@ export default function Config() {
       {!isVanguard && (
         <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full border-warning/50 text-warning">
+            <Button variant="outline" className="w-full text-critical border-0">
               <DoorOpen className="h-4 w-4 mr-2" /> LEAVE KNOT
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-sm">
+          <DialogContent className="sm:max-w-sm bg-card">
             <DialogHeader>
               <DialogTitle>Leave this Knot?</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-foreground">
               You'll lose access to this Knot's supplies, map, and members. Your role ({roleLabels[user.role]}) will open up for someone else to fill. You can join another Knot afterward.
             </p>
             <DialogFooter className="gap-2 sm:gap-2">

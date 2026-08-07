@@ -63,10 +63,8 @@ export default function KnotSetup() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      <div className="flex items-center gap-3 mb-8">
-        <Shield className="h-10 w-10 text-primary" />
-        <h1 className="text-3xl font-heading font-black tracking-wider">THE KNOT</h1>
-      </div>
+      
+        <img className="max-w-52" src="/LOGO.png" />
 
       {mode === "choose" && (
         <Card className="w-full max-w-sm tactical-border">
@@ -74,7 +72,7 @@ export default function KnotSetup() {
             <CardTitle className="text-center text-lg">Initial Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button onClick={() => setMode("create")} variant="safe" className="w-full text-white" size="lg">
+            <Button onClick={() => setMode("create")} className="w-full text-black font-bold" size="lg">
               <Plus className="h-5 w-5 mr-2" /> CREATE A KNOT
             </Button>
             <Button onClick={() => setMode("join")} variant="outline" className="w-full" size="lg">
@@ -91,7 +89,7 @@ export default function KnotSetup() {
         <Card className="w-full max-w-sm tactical-border">
           <CardHeader className="pb-4">
             <CardTitle className="text-center text-lg flex items-center justify-center gap-2">
-              <Users className="h-5 w-5 text-primary" /> CREATE KNOT
+              CREATE KNOT
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -107,8 +105,8 @@ export default function KnotSetup() {
               <p className="text-xs text-muted-foreground">
                 You'll be assigned as <span className="text-primary font-semibold">Vanguard</span> (leader) automatically.
               </p>
-              <Button type="submit" variant="safe" className="w-full text-white" size="lg" disabled={submitting}>
-                {submitting ? "Creating..." : "CREATE KNOT"}
+              <Button type="submit" className="w-full text-black font-bold" size="lg" disabled={submitting}>
+                <Users /> {submitting ? "Creating..." : "CREATE KNOT"}
               </Button>
               <Button type="button" variant="ghost" className="w-full" onClick={() => setMode("choose")}>
                 Go Back
@@ -122,7 +120,7 @@ export default function KnotSetup() {
         <Card className="w-full max-w-sm tactical-border">
           <CardHeader className="pb-4">
             <CardTitle className="text-center text-lg flex items-center justify-center gap-2">
-              <KeyRound className="h-5 w-5 text-primary" /> JOIN A KNOT
+              JOIN A KNOT
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -148,8 +146,8 @@ export default function KnotSetup() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" variant="safe" className="w-full text-white" size="lg" disabled={submitting}>
-                {submitting ? "Joining..." : "JOIN"}
+              <Button type="submit" className="w-full text-black font-bold" size="lg" disabled={submitting}>
+                <KeyRound />{submitting ? "Joining..." : "JOIN"}
               </Button>
               <Button type="button" variant="ghost" className="w-full" onClick={() => setMode("choose")}>
                 Go Back

@@ -19,7 +19,7 @@ export default function Auth() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-primary font-heading text-xl">THE KNOT</div>
+        <div className="text-primary font-heading text-xl">THE_KNOT_</div>
       </div>
     );
   }
@@ -49,10 +49,8 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      <div className="flex items-center gap-3 mb-8">
-        <Shield className="h-10 w-10 text-primary" />
-        <h1 className="text-3xl font-heading font-black text-white tracking-wider">THE KNOT</h1>
-      </div>
+      
+      <img className="max-w-52" src="/LOGO.png" />
 
       <Card className="w-full max-w-sm tactical-border">
         <CardHeader className="pb-4">
@@ -87,7 +85,7 @@ export default function Auth() {
                 className="bg-secondary border-border"
               />
             </div>
-            <Button type="submit" variant="safe" className="w-full text-white" size="lg" disabled={submitting}>
+            <Button type="submit" className="w-full text-black font-bold" size="lg" disabled={submitting}>
               {mode === "signin" ? (
                 <><LogIn className="h-5 w-5 mr-2" /> LOG IN</>
               ) : (
