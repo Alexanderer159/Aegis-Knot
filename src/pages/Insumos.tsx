@@ -122,7 +122,7 @@ export default function Insumos() {
       {/* Category Filter */}
       <div className="grid grid-cols-2 gap-2 overflow-x-auto pb-1">
         {categories.map(cat => (
-          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary/70" : "bg-secondary")}>
+          <button key={cat} onClick={() => setFilter(cat)} className={cn("shrink-0 rounded-md font-semibold p-2 transition-all", filter === cat ? "bg-primary text-black font-semibold" : "bg-secondary/70")}>
             {cat === "all" ? "All" : cat}
           </button>
         ))}

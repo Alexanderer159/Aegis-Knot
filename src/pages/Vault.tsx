@@ -38,7 +38,7 @@ export default function Vault() {
       {/* Category Tabs */}
       <div className="grid gap-2 ">
         {categories.map((cat) => (
-          <Button key={cat} onClick={() => setSelectedCat(cat)} className={selectedCat === cat ? "bg-primary/80 text-white font-semibold" : "bg-secondary text-white font-semibold"} >
+          <Button key={cat} onClick={() => setSelectedCat(cat)} className={selectedCat === cat ? "bg-primary text-black font-semibold" : "bg-secondary/70 text-white font-semibold"} >
             {cat}
           </Button>
         ))}
