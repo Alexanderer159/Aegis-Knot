@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCompassHeading } from "@/hooks/useCompassHeading";
 import { Compass as CompassIcon, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-const EXIT_DURATION = 300; // ms, must match the transition duration used below
+const EXIT_DURATION = 300;
 
 function headingLabel(heading: number): string {
   const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
@@ -15,18 +15,40 @@ function headingLabel(heading: number): string {
 
 export function Compass() {
   const { heading, supported, permissionNeeded, permissionGranted, error, requestPermission } = useCompassHeading();
-  const [mounted, setMounted] = useState(false); // whether the overlay exists in the DOM at all
-  const [visible, setVisible] = useState(false); // whether it's in its "shown" transition state
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  // Tracks the accumulated rotation (can exceed 360 or go negative) so the
+  // ring always takes the shortest visual path instead of snapping at the
+  // 0/360 wrap-around point
+  const [displayRotation, setDisplayRotation] = useState(0);
+  const lastRawHeading = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (heading === null) return;
+
+    if (lastRawHeading.current === null) {
+      lastRawHeading.current = heading;
+      setDisplayRotation(-heading);
+      return;
+    }
+
+    let delta = heading - lastRawHeading.current;
+    // Normalize delta to the range (-180, 180], i.e. the shortest turn direction
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+
+    lastRawHeading.current = heading;
+    setDisplayRotation((prev) => prev - delta);
+  }, [heading]);
 
   const openFullscreen = () => setMounted(true);
 
   const closeFullscreen = () => {
-    setVisible(false); // triggers the exit transition
-    setTimeout(() => setMounted(false), EXIT_DURATION); // unmount only after it finishes
+    setVisible(false);
+    setTimeout(() => setMounted(false), EXIT_DURATION);
   };
 
-  // Once mounted, flip to visible on the next frame so the enter transition
-  // actually animates from a starting state instead of snapping in
   useEffect(() => {
     if (mounted) {
       const raf = requestAnimationFrame(() => setVisible(true));
@@ -61,26 +83,29 @@ export function Compass() {
     );
   }
 
-const dialFace = (size: number) => (
-  <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-    <div
-      className="absolute inset-0 rounded-full border-2 border-primary/40 flex items-center justify-center transition-transform duration-200 ease-out"
-      style={{ transform: `rotate(${heading !== null ? -heading : 0}deg)` }}
-    >
-      <span className="absolute top-2 text-critical font-bold text-sm">N</span>
-      <span className="absolute bottom-2 text-muted-foreground text-sm">S</span>
-      <span className="absolute left-2 text-muted-foreground text-sm">W</span>
-      <span className="absolute right-2 text-muted-foreground text-sm">E</span>
+  const dialFace = (size: number) => (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <div
+        className="absolute inset-0 rounded-full border-2 border-primary/40 flex items-center justify-center transition-transform duration-200 ease-linear"
+        style={{ transform: `rotate(${displayRotation}deg)` }}
+      >
+        <span className="absolute top-2 text-critical font-bold text-sm">N</span>
+        <span className="absolute bottom-2 text-muted-foreground text-sm">S</span>
+        <span className="absolute left-2 text-muted-foreground text-sm">W</span>
+        <span className="absolute right-2 text-muted-foreground text-sm">E</span>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <Navigation
+          className="text-primary"
+          style={{ width: size * 0.35, height: size * 0.35, transform: "rotate(-45deg)" }}
+          fill="currentColor"
+        />
+      </div>
     </div>
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <Navigation className="text-primary" style={{ width: size * 0.35, height: size * 0.35, transform: "rotate(-45deg)" }} fill="currentColor"/>
-    </div>
-  </div>
-);
+  );
 
   return (
     <>
-      {/* Compact Preview */}
       <Card onClick={openFullscreen} className="tactical-border cursor-pointer transition-colors hover:bg-secondary/30">
         <CardContent className="p-6 flex flex-col items-center gap-3">
           {dialFace(160)}
@@ -98,7 +123,6 @@ const dialFace = (size: number) => (
         </CardContent>
       </Card>
 
-      {/* Fullscreen Overlay */}
       {mounted && (
         <div
           onClick={closeFullscreen}
