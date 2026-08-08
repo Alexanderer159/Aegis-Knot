@@ -2,7 +2,7 @@ import { BookOpen, FileText, Video, BookMarked, ChevronUp, Search } from "lucide
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { knowledgeBase, type KBArticle } from "@/lib/knowledgeBase";
+import { knowledgeBase } from "@/lib/knowledgeBase";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -47,14 +47,11 @@ export default function Vault() {
       {/* Articles */}
       <div className="space-y-2">
         {filtered.map((article) => {
-          const Icon = typeIcons[article.type];
           const isExpanded = expandedId === article.id;
           return (
             <Card key={article.id} className={cn("transition-all duration-500", isExpanded && "border-primary")}>
               <CardContent className="py-3">
                 <button onClick={() => setExpandedId(isExpanded ? null : article.id)} className="flex items-center gap-3 w-full text-left">
-                  
-                    <Icon className="h-5 w-5 text-primary" />
                   
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-heading font-semibold truncate">{article.title}</p>
@@ -64,11 +61,11 @@ export default function Vault() {
                 </button>
 
                 {isExpanded && (
-                  <div className="mt-4 space-y-4 border-t border-border pt-4">
+                  <div className="mt-4 space-y-4 pt-4">
                     {article.sections.map((section, idx) => (
                       <div key={idx} className="space-y-2">
                         <h4 className="text-sm font-heading font-bold text-primary">{section.title}</h4>
-                        <div className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed font-mono text-xs bg-secondary/50 rounded-lg p-3">
+                        <div className="text-foreground/90 whitespace-pre-line leading-relaxed font-mono text-xs bg-secondary/50 rounded-lg p-3">
                           {section.content}
                         </div>
                       </div>

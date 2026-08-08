@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { X, Maximize2, MapPin, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMapMarkers, type MarkerCategory } from "@/hooks/useMapMarkers";
 import { usePodLocations } from "@/hooks/useLocationSharing";
 import { useAuth } from "@/hooks/useAuth";
@@ -120,6 +121,20 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
   const [newCategory, setNewCategory] = useState<MarkerCategory>("meeting");
   const [submitting, setSubmitting] = useState(false);
 
+  // Marker deletion confirmation
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { error } = await removeMarker(deleteTarget.id);
+    if (error) {
+      toast({ title: "Couldn't delete point", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Point deleted", description: deleteTarget.name });
+    }
+    setDeleteTarget(null);
+  };
+
   useEffect(() => {
     if (focusPoint) {
       setFullscreen(true);
@@ -136,23 +151,23 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
   })();
 
   const getCenter = (): [number, number] => {
-  // Priority 1: explicit focus point (e.g. jumped here from a member's card)
-  if (focusPoint) {
-    return [focusPoint.lat, focusPoint.lng];
-  }
-  // Priority 2: your own shared location
-  if (myLocation) {
-    return [myLocation.lat, myLocation.lng];
-  }
-  // Priority 3: average of existing map markers
-  if (markers.length > 0) {
-    const avgLat = markers.reduce((s, m) => s + m.latitude, 0) / markers.length;
-    const avgLng = markers.reduce((s, m) => s + m.longitude, 0) / markers.length;
-    return [avgLat, avgLng];
-  }
-  // Priority 4: fallback to Madrid
-  return [40.4168, -3.7038];
-};
+    // Priority 1: explicit focus point (e.g. jumped here from a member's card)
+    if (focusPoint) {
+      return [focusPoint.lat, focusPoint.lng];
+    }
+    // Priority 2: your own shared location
+    if (myLocation) {
+      return [myLocation.lat, myLocation.lng];
+    }
+    // Priority 3: average of existing map markers
+    if (markers.length > 0) {
+      const avgLat = markers.reduce((s, m) => s + m.latitude, 0) / markers.length;
+      const avgLng = markers.reduce((s, m) => s + m.longitude, 0) / markers.length;
+      return [avgLat, avgLng];
+    }
+    // Priority 4: fallback to Madrid
+    return [40.4168, -3.7038];
+  };
 
   const handleConfirmAdd = async () => {
     if (!pendingPoint || !newName.trim()) return;
@@ -181,8 +196,8 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
         <div className="pointer-events-none absolute inset-0 z-0">
           <MapContainer center={getCenter()} zoom={13} scrollWheelZoom={false} dragging={false} doubleClickZoom={false} zoomControl={false} touchZoom={false} attributionControl={false} className="w-full h-full">
             <RecenterMap center={getCenter()} />
-            <CachedMapTiles url={TILE_URL}  />
-            
+            <CachedMapTiles url={TILE_URL} />
+
             {markers.map((marker) => (
               <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)} />
             ))}
@@ -219,14 +234,14 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
               <InvalidateOnMount />
               <RecenterMap center={getCenter()} />
               <LongPressListener onPick={(lat, lng) => setPendingPoint({ lat, lng })} />
-              <CachedMapTiles url={TILE_URL}  />
+              <CachedMapTiles url={TILE_URL} />
 
               {markers.map((marker) => (
                 <Marker key={marker.id} position={[marker.latitude, marker.longitude]} icon={poiIcon(marker.category)}>
                   <Popup>
                     <div className="flex gap-5 items-center">
                       <span className="font-bold">{marker.name}</span>
-                      <button onClick={() => removeMarker(marker.id)} >
+                      <button onClick={() => setDeleteTarget({ id: marker.id, name: marker.name })}>
                         <Trash2 className="text-critical w-5"/>
                       </button>
                     </div>
@@ -277,6 +292,22 @@ export default function AegisMap({ heightClass = "h-48", focusPoint }: Props) {
           )}
         </div>
       )}
+
+      {/* Delete Marker Confirmation */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="bg-card z-[1200]">
+          <DialogHeader>
+            <DialogTitle>Delete this point?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-foreground text-center">
+            "{deleteTarget?.name}" will be removed from the map for everyone in your Knot. This can't be undone.
+          </p>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1" onClick={confirmDelete}>Delete</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

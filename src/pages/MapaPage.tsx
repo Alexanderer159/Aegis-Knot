@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin, AlertTriangle, Droplets, Home, Share2, Users, Plus, Trash2, CheckCircle2, ShieldAlert } from "lucide-react";
+import { MapPin, AlertTriangle, Droplets, Home, Share2, Users, Plus, Trash2, CheckCircle2, ShieldAlert, CompassIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import AegisMap from "@/components/AegisMap";
 import type { StatusType } from "@/lib/store";
 import { useOfflineMarkerSync } from "@/hooks/useOfflineMarkerSync";
+import { Compass } from "@/components/Compass";
 
 const markerIcons: Record<MarkerCategory, React.ElementType> = {
   meeting: MapPin,
@@ -47,9 +48,8 @@ const statusColors: Record<string, string> = {
 export default function MapaPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const focusPoint = location.state?.focusLat && location.state?.focusLng
-    ? { lat: location.state.focusLat, lng: location.state.focusLng }
-    : null;
+  const focusPoint = location.state?.focusLat && location.state?.focusLng ? { lat: location.state.focusLat, lng: location.state.focusLng } : null;
+  const [showCompass, setShowCompass] = useState(false);
 
   const podMembers = usePodLocations();
   const { markers, addMarker, removeMarker } = useMapMarkers();
@@ -67,20 +67,23 @@ export default function MapaPage() {
   const [shareStatus, setShareStatus] = useState<StatusType>("ok");
   const [locating, setLocating] = useState(false);
   const { enabled: offlineEnabled, enable: enableOffline, disable: disableOffline, syncing, progress } = useOfflineMarkerSync();
-const [offlineConfirmOpen, setOfflineConfirmOpen] = useState(false);
+  const [offlineConfirmOpen, setOfflineConfirmOpen] = useState(false);
 
-const handleOfflineToggle = (checked: boolean) => {
-  if (checked) {
-    enableOffline();
-  } else {
-    setOfflineConfirmOpen(true); // don't disable yet, confirm first
-  }
-};
+  // Marker deletion confirmation
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
-const confirmDisableOffline = () => {
-  disableOffline();
-  setOfflineConfirmOpen(false);
-};
+  const handleOfflineToggle = (checked: boolean) => {
+    if (checked) {
+      enableOffline();
+    } else {
+      setOfflineConfirmOpen(true); // don't disable yet, confirm first
+    }
+  };
+
+  const confirmDisableOffline = () => {
+    disableOffline();
+    setOfflineConfirmOpen(false);
+  };
 
   const handleAdd = async () => {
     const lat = parseFloat(newLat);
@@ -103,14 +106,20 @@ const confirmDisableOffline = () => {
     setShowAdd(false);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
+  const requestDelete = (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
-    const { error } = await removeMarker(id);
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { error } = await removeMarker(deleteTarget.id);
     if (error) {
       toast({ title: "Couldn't delete point", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Point deleted", description: name });
+      toast({ title: "Point deleted", description: deleteTarget.name });
     }
+    setDeleteTarget(null);
   };
 
   const goToLocation = (lat: number, lng: number) => {
@@ -200,46 +209,70 @@ const confirmDisableOffline = () => {
       {/* Map Preview */}
       <AegisMap heightClass="h-60" focusPoint={focusPoint} />
 
-<Card className="tactical-border">
-  <CardHeader className="pb-3">
-    <CardTitle className="text-base">OFFLINE MAPS</CardTitle>
-  </CardHeader>
-  <CardContent className="space-y-3">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <span className="text-sm">Auto-download around your points</span>
-        <p className="text-xs text-muted-foreground">Keeps the map ready offline near every point you place</p>
-      </div>
-      <Switch checked={offlineEnabled} onCheckedChange={handleOfflineToggle} />
-    </div>
+      <Card className="tactical-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">OFFLINE MAPS</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <span className="text-sm">Auto-download around your points</span>
+              <p className="text-xs text-muted-foreground">Keeps the map ready offline near every point you place</p>
+            </div>
+            <Switch checked={offlineEnabled} onCheckedChange={handleOfflineToggle} />
+          </div>
 
-    {offlineEnabled && syncing && (
-      <div className="space-y-1">
-        <div className="h-2 bg-secondary rounded-full overflow-hidden">
-          <div className="h-full bg-primary transition-all" style={{ width: progress.total ? `${(progress.done / progress.total) * 100}%` : "0%" }} />
+          {offlineEnabled && syncing && (
+            <div className="space-y-1">
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-primary transition-all" style={{ width: progress.total ? `${(progress.done / progress.total) * 100}%` : "0%" }} />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Syncing: {progress.done} / {progress.total} tiles
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={offlineConfirmOpen} onOpenChange={setOfflineConfirmOpen}>
+        <DialogContent className="bg-card">
+          <DialogHeader>
+            <DialogTitle>Turn off offline maps?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">This deletes all map data cached for your points. You'll need an internet connection to view the map again until you turn this back on.</p>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setOfflineConfirmOpen(false)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1" onClick={confirmDisableOffline}>Turn Off & Delete</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Marker Confirmation */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="bg-card">
+          <DialogHeader>
+            <DialogTitle>Delete this point?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-foreground text-center">
+            "{deleteTarget?.name}" will be removed from the map for everyone in your Knot. This can't be undone.
+          </p>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1" onClick={confirmDelete}>Delete</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className={cn("grid transition-all duration-500 ease-in-out", showCompass ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0 mt-0")}>
+        <div className="overflow-hidden">
+          <Compass />
         </div>
-        <p className="text-xs text-muted-foreground text-center">
-          Syncing: {progress.done} / {progress.total} tiles
-        </p>
       </div>
-    )}
-  </CardContent>
-</Card>
 
-<Dialog open={offlineConfirmOpen} onOpenChange={setOfflineConfirmOpen}>
-  <DialogContent className="bg-card">
-    <DialogHeader>
-      <DialogTitle>Turn off offline maps?</DialogTitle>
-    </DialogHeader>
-    <p className="text-sm text-muted-foreground">
-      This deletes all map data cached for your points. You'll need an internet connection to view the map again until you turn this back on.
-    </p>
-    <div className="flex gap-2 pt-2">
-      <Button variant="outline" className="flex-1" onClick={() => setOfflineConfirmOpen(false)}>Cancel</Button>
-      <Button variant="destructive" className="flex-1" onClick={confirmDisableOffline}>Turn Off & Delete</Button>
-    </div>
-  </DialogContent>
-</Dialog>
+      <Button onClick={() => setShowCompass(!showCompass)} className="w-full bg-card/70 text-primary ring-0">
+        <CompassIcon className="h-4 w-4 mr-2" /> {showCompass ? "Hide Compass" : "Show Compass"}
+      </Button>
 
       {/* Points of Interest */}
       <Card className="tactical-border">
@@ -269,7 +302,7 @@ const confirmDisableOffline = () => {
                   </p>
                 </div>
                 <button
-                  onClick={(e) => handleDelete(e, marker.id, marker.name)}
+                  onClick={(e) => requestDelete(e, marker.id, marker.name)}
                   className="h-7 w-7 rounded bg-secondary flex items-center justify-center hover:bg-critical/20 text-muted-foreground hover:text-critical transition-colors shrink-0"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
