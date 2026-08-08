@@ -62,7 +62,7 @@ body::before {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: saturate(1) contrast(1);
+  filter: saturate(2) contrast(1.5);
 }
 
 body::after {
