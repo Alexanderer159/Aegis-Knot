@@ -61,22 +61,22 @@ export function Compass() {
     );
   }
 
-  const dialFace = (size: number) => (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      <div
-        className="absolute inset-0 rounded-full border-2 border-primary/40 flex items-center justify-center transition-transform duration-200 ease-out"
-        style={{ transform: `rotate(${heading !== null ? -heading : 0}deg)` }}
-      >
-        <span className="absolute top-2 text-critical font-bold text-sm">N</span>
-        <span className="absolute bottom-2 text-muted-foreground text-sm">S</span>
-        <span className="absolute left-2 text-muted-foreground text-sm">W</span>
-        <span className="absolute right-2 text-muted-foreground text-sm">E</span>
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <Navigation className="text-primary" style={{ width: size * 0.35, height: size * 0.35 }} fill="currentColor" />
-      </div>
+const dialFace = (size: number) => (
+  <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <div
+      className="absolute inset-0 rounded-full border-2 border-primary/40 flex items-center justify-center transition-transform duration-200 ease-out"
+      style={{ transform: `rotate(${heading !== null ? -heading : 0}deg)` }}
+    >
+      <span className="absolute top-2 text-critical font-bold text-sm">N</span>
+      <span className="absolute bottom-2 text-muted-foreground text-sm">S</span>
+      <span className="absolute left-2 text-muted-foreground text-sm">W</span>
+      <span className="absolute right-2 text-muted-foreground text-sm">E</span>
     </div>
-  );
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <Navigation className="text-primary" style={{ width: size * 0.35, height: size * 0.35, transform: "rotate(-45deg)" }} fill="currentColor"/>
+    </div>
+  </div>
+);
 
   return (
     <>
