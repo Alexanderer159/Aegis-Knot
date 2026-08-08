@@ -45,6 +45,7 @@
 
   * {
     @apply border-border;
+    overflow-clip-margin: unset;
   }
 
 body {
