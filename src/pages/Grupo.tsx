@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Heart, Compass, Radio, Package, HardHat, Users, UserPlus, Bell, Trash2, CheckCircle2, AlertTriangle, ShieldAlert, MapPin } from "lucide-react";
+import { Shield, Heart, Compass, Radio, Package, HardHat, Users, UserPlus, Bell, Trash2, CheckCircle2, AlertTriangle, ShieldAlert, MapPin, ListChecks } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { roleLabels, roleDescriptions, type RoleType, type StatusType } from "@/lib/store";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { roleLabels, roleDescriptions, useAppState, type RoleType, type StatusType } from "@/lib/store";
 import { useMembers } from "@/hooks/useMembers";
 import { useSupplies } from "@/hooks/useSupplies";
 import { roleCategoryMap } from "@/lib/supplies";
@@ -29,6 +30,7 @@ export default function Grupo() {
   const { user, addDependent, removeDependent, shareLocation } = useLocalUser();
   const { toast } = useToast();
   const { roster } = useMembers();
+  const { activity } = useAppState();
   const navigate = useNavigate();
   const [sheetRole, setSheetRole] = useState<RoleType | null>(null);
   const { supplies } = useSupplies();
@@ -75,17 +77,16 @@ export default function Grupo() {
         }
       },
       async (err) => {
-        // Location denied/unavailable: still update status, just without a location
         const { error } = await shareLocation(0, 0, status).catch(() => ({ error: err }));
         setUpdatingStatus(false);
         toast({ title: "Status updated without location", description: "Location access was denied or unavailable." });
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 60000 }
     );
   };
 
   const goToLocation = (e: React.MouseEvent, lat: number, lng: number) => {
-    e.stopPropagation(); // prevent the card's own onClick from also opening the role sheet
+    e.stopPropagation();
     navigate("/map", { state: { focusLat: lat, focusLng: lng } });
   };
 
@@ -110,7 +111,16 @@ export default function Grupo() {
         </Button>
       </div>
 
-      {/* Role Cards */}
+      {/* Members / Activity Accordion */}
+<Accordion type="single" collapsible defaultValue="members" >
+  <AccordionItem value="members" className="border-none">
+    <AccordionTrigger className="hover:no-underline">
+      <CardTitle className="text-base flex items-center gap-2">
+        <Users className="h-4 w-4 text-primary" />
+        KNOT MEMBERS
+      </CardTitle>
+    </AccordionTrigger>
+    <AccordionContent className="">
       <div className="space-y-2">
         {roster.map((entry) => {
           const Icon = roleIcons[entry.role];
@@ -118,20 +128,16 @@ export default function Grupo() {
           const hasValidLocation = entry.filled && entry.latitude && entry.longitude && !(entry.latitude === 0 && entry.longitude === 0);
 
           return (
-            <Card
-              key={entry.role}
-              className={cn("relative transition-all", !entry.filled && "")}
+            <Card key={entry.role} className={cn("relative transition-all", !entry.filled && "")}
               onClick={() => setSheetRole(entry.role)}
             >
-              {/* Status dot, positioned at the card's top-right corner */}
               <span className={cn("absolute top-2 right-2 h-2 w-2 rounded-full shrink-0",
                 entry.status === "ok" ? "bg-safe" :
                 entry.status === "help" ? "bg-warning animate-pulse-glow" :
                 entry.status === "critical" ? "bg-critical animate-pulse-glow" : ""
               )} />
 
-              <CardContent className="flex items-center justify-between gap-3 ">
-
+              <CardContent className="flex items-center justify-between gap-3">
                 <div className="flex h-10 w-10 items-center justify-center">
                   <Icon className="text-primary" />
                 </div>
@@ -168,12 +174,45 @@ export default function Grupo() {
                     </p>
                   )}
                 </div>
-
               </CardContent>
             </Card>
           );
         })}
       </div>
+    </AccordionContent>
+  </AccordionItem>
+
+  <AccordionItem value="activity" className="border-none">
+    <AccordionTrigger className="hover:no-underline">
+      <CardTitle className="text-base flex items-center gap-2">
+        <ListChecks className="h-4 w-4 text-primary" />
+        ACTIVITY FEED
+      </CardTitle>
+    </AccordionTrigger>
+    <AccordionContent >
+      <div className="space-y-2">
+        {activity.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-2">No activity yet</p>
+        )}
+        {activity.map((item) => (
+          <div key={item.id} className="flex items-start gap-3 rounded-lg bg-secondary/50 px-3 py-2.5">
+            <span className={cn(
+              "mt-1 h-2 w-2 rounded-full shrink-0",
+              item.type === "alert" ? "bg-warning" : item.type === "status" ? "bg-safe" : "bg-muted-foreground"
+            )} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="font-semibold">{item.memberName}</span>{" "}
+                <span className="text-muted-foreground">{item.action}</span>
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground font-mono shrink-0">{item.timestamp}</span>
+          </div>
+        ))}
+      </div>
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
 
       {/* Family Nodes */}
       <Card className="tactical-border">
@@ -210,7 +249,6 @@ export default function Grupo() {
           ))}
 
           <div className="flex gap-2 pt-1">
-
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="flex-1">
@@ -250,7 +288,6 @@ export default function Grupo() {
                   </Button>
                 </form>
               </DialogContent>
-
             </Dialog>
 
             <Button size="sm" className="bg-critical/70 flex-1 text-white">
@@ -258,7 +295,6 @@ export default function Grupo() {
               Reunite Family
             </Button>
           </div>
-
         </CardContent>
       </Card>
 

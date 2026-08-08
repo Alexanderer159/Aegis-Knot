@@ -48,10 +48,30 @@
   }
 
 body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Rajdhani', sans-serif;
-  }
+  @apply bg-background text-foreground font-sans antialiased;
+  font-family: 'Rajdhani', sans-serif;
+  position: relative;
+}
 
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url('/Topography.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(1) contrast(1);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: hsl(var(--background) / 0.8);
+}
   h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
   }
